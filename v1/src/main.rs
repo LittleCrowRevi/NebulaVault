@@ -38,7 +38,8 @@ fn print_timer(time: Res<Time>, mut timer: ResMut<NebulaTime>, query: Query<&Ite
     
     if timer.0.tick(time.delta()).just_finished() {
         let count = query.iter().count();
-        let text = count_text.single_mut();
+        let mut text = count_text.single_mut();
+        text.sections[0].value = format!("Count: {count}");
         println!("Tick! Items: {count}");
         
         commands.spawn(Item { number: (count + 1) as i64 });
