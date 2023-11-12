@@ -83,7 +83,7 @@ features = [
     #"trace_tracy",     # Tracing using `tracy`
     #"trace_tracy_memory", # + memory profiling
     #"trace_chrome",    # Tracing using the Chrome format
-    "wgpu_trace",      # WGPU/rendering tracing
+    #"wgpu_trace",      # WGPU/rendering tracing
 ]
 
 # Enable a small amount of optimization in debug mode

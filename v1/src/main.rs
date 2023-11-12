@@ -1,20 +1,33 @@
+use std::ops::DerefMut;
+use std::process::Command;
 use bevy::app::{App, AppExit, Plugin, Startup, Update};
+use bevy::DefaultPlugins;
 use bevy::input::Input;
-use bevy::math::{Vec2, Vec3};
+use bevy::math::{Vec2, vec2, Vec3, vec3};
 use bevy::prelude::*;
+use bevy::render::render_resource::encase::private::Length;
 use bevy::sprite::SpriteBundle;
 use bevy::text::{Text, TextAlignment, TextStyle};
 use bevy::time::{Timer, TimerMode};
 use bevy::ui::{PositionType, Style};
 use bevy::utils::default;
-use bevy::DefaultPlugins;
 
-const MOVEMENT_SPEED: f32 = 200.0;
+const MOVEMENT_SPEED: f32 = 500.0;
+const BOUNDARY_BOX: Vec2 = Vec2::new(600.0, 400.0);
+const GRID_BOX: Vec2 = Vec2::new(20.0, 20.0);
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, NebulaVault))
-        
+        .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
+        .add_plugins((DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: String::from("Nebula Vault"),
+                resolution: (800.0, 600.0).into(),
+                ..default()
+            }),
+            ..default()
+        }), NebulaVault))
+
         .run();
 }
 
@@ -22,7 +35,9 @@ fn main() {
 struct NebulaTime(Timer);
 
 #[derive(Component)]
-struct Item { number: i64 }
+struct Item {
+    number: i64,
+}
 
 #[derive(Component)]
 struct Player;
@@ -34,7 +49,18 @@ struct Movement(f32);
 struct TagCamera;
 
 #[derive(Component)]
-struct DevText { mov_num: f32 }
+struct DevText {
+    mov_num: f32,
+}
+
+#[derive(Component)]
+struct Grid(String);
+
+#[derive(Component)]
+struct GridBox;
+
+#[derive(Component)]
+struct GridPos(Vec2);
 
 const SCORE_COLOR: Color = Color::rgb(1., 1., 1.);
 
@@ -60,29 +86,95 @@ fn setup(mut commands: Commands) {
                 ..default()
             },
         )
-        .with_text_alignment(TextAlignment::Left)
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            bottom: Val::Px(10.0),
-            ..default()
-        }),
+            .with_text_alignment(TextAlignment::Left)
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                top: Val::Px(5.0),
+                left: Val::Px(5.0),
+                ..default()
+            }),
         DevText { mov_num: 0f32 }
     ));
+
+    commands.spawn((
+        SpriteBundle {
+            sprite: Sprite {
+                color: Color::rgb(0.15, 0.15, 0.15),
+                custom_size: Some(Vec2::new(BOUNDARY_BOX.x, BOUNDARY_BOX.y)),
+                ..default()
+            },
+            ..default()
+        },
+    ));
+
+    create_grid(&mut commands, GRID_BOX, BOUNDARY_BOX, "MainGrid".into());
 
     // player sprite
     commands.spawn((
         SpriteBundle {
             sprite: Sprite {
                 color: Color::rgb(0.25, 0.25, 0.55),
-                custom_size: Some(Vec2::new(25.0, 25.0)),
+                custom_size: Some(Vec2::new(20.0, 20.0)),
                 ..default()
             },
-            transform: Transform::from_translation(Vec3::new(-50.0, 0.0, 0.0)),
+            transform: Transform::from_translation(Vec3::new(-50.0, 0.0, 1.0)),
             ..default()
         },
         Player,
-        Movement ( 0f32 )
+        Movement(0f32)
     ));
+}
+
+fn create_grid(commands: &mut Commands, grid_box: Vec2, boundary_box: Vec2, grid_name: String) {
+    let grid_x = grid_box.x as usize;
+    let grid_y = grid_box.y as usize;
+
+    let mut grid = commands.spawn((
+        Grid(grid_name),
+        SpatialBundle {
+            ..default()
+        }
+    ));
+
+    grid.with_children(|parent| {
+        for x in ((boundary_box.x - grid_box.x) as i32 / -2..boundary_box.x as i32 / 2).step_by(grid_x) {
+            for y in ((boundary_box.y - grid_box.y) as i32 / -2..boundary_box.y as i32 / 2).step_by(grid_y) {
+                spawn_box(parent, (x) as f32, (y) as f32);
+            }
+        }
+    });
+}
+
+fn spawn_box(commands: &mut ChildBuilder, x: f32, y: f32) {
+    commands.spawn((
+        SpatialBundle {
+            transform: Transform::from_translation(vec3(x, y, 1.0)),
+            visibility: Visibility::Visible,
+            ..default()
+        },
+        GridBox
+    )).with_children(|parent| {
+        parent.spawn(
+            SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgb(0.2, 0.2, 0.2),
+                    custom_size: Some(vec2(GRID_BOX.x, GRID_BOX.y)),
+                    ..default()
+                },
+                ..default()
+            }
+        );
+        parent.spawn(
+            SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgb(0.15, 0.15, 0.15),
+                    custom_size: Some(vec2(GRID_BOX.x - GRID_BOX.x / GRID_BOX.y, GRID_BOX.y - GRID_BOX.y / GRID_BOX.y)),
+                    ..default()
+                },
+                ..default()
+            }
+        );
+    });
 }
 
 fn print_dev(
@@ -91,49 +183,51 @@ fn print_dev(
     query: Query<&Item>,
     mut commands: Commands,
     mut count_text: Query<(&mut Text, &mut DevText)>,
-    player_query: Query<(&Player, &Movement)>
+    player_query: Query<(&Player, &Movement)>,
+    window_query: Query<&Window>,
+    grid_parent_q: Query<(&Grid, &Children)>,
+    grid_boxes_q: Query<(&GridBox, &Transform)>,
 ) {
     let player = player_query.single();
-    let mut mov = 0f32;
-    mov = player.1.0;
-    
+    let mov: f32 = player.1.0;
+
     let mut t = count_text.single_mut();
-    let text = &mut t.0.sections[0].value;
+    let text: &mut String = &mut t.0.sections[0].value;
     let dev_stats = &mut t.1;
-    *text = "Dev Settings\n".to_string();
-    
-    let mut count = query.iter().count();
+    *text = "Dev Stats\n".to_string();
+
+    // seconds counter
+    let mut count: i64 = query.iter().count() as i64;
     if timer.0.tick(time.delta()).just_finished() {
         count += 1;
-        commands.spawn(Item {
-            number: (count + 1) as i64,
-        });
-        
+        commands.spawn(Item { number: (count + 1) });
     };
     text.push_str(&format!("Seconds: {count}\n"));
-    
+
+    // movement speed counter
     let mut elapsed = (timer.0.elapsed_secs() * 10.0);
     elapsed = elapsed - elapsed.fract();
-    
+
     if elapsed % 2.0 == 0.0 {
         dev_stats.mov_num = mov;
-        
-    } else if mov == 0.0 {
-        dev_stats.mov_num = mov;
     }
-    
+
     let mov_text = format!("Speed: {}\n", dev_stats.mov_num);
     text.push_str(&mov_text);
-    
+
+    for (grid, children) in grid_parent_q.iter() {
+        let child_boxes = children.length();
+        text.push_str(&*format!("{} Boxes: {}\n", grid.0, child_boxes));
+    }
 }
 
 fn handle_input(
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Player, &mut Transform, &mut Movement)>,
+    mut query: Query<(&mut Player, &mut Transform, &mut Movement, &Sprite)>,
     mut exit: EventWriter<AppExit>,
     time: Res<Time>,
 ) {
-    for (mut player, mut transform, mut mov) in query.iter_mut() {
+    for (mut player, mut transform, mut mov, sprite) in query.iter_mut() {
         let mut pan = Vec2::ZERO;
         let mut distance = Vec3::ZERO;
 
@@ -165,8 +259,17 @@ fn handle_input(
 
         if !distance.eq(&Vec3::ZERO) {
             let movement_clamped = distance.clamp_length_max(MOVEMENT_SPEED);
-            transform.translation += movement_clamped * time.delta_seconds();
-            mov.0 = movement_clamped.length() * time.delta_seconds();
+            let mov_delta = movement_clamped * time.delta_seconds();
+
+            transform.translation += mov_delta;
+
+            let player_size = sprite.custom_size.unwrap() / 2.0;
+            let mut position = transform.translation;
+            position.x = position.x.clamp(BOUNDARY_BOX.x / -2.0 + player_size.x, BOUNDARY_BOX.x / 2.0 - player_size.x);
+            position.y = position.y.clamp(BOUNDARY_BOX.y / -2.0 + player_size.y, BOUNDARY_BOX.y / 2.0 - player_size.y);
+            transform.translation = position;
+
+            mov.0 = mov_delta.length();
         } else {
             mov.0 = 0f32;
         }
