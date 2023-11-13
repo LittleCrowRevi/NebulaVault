@@ -16,3 +16,4 @@ out
 **/target/*
 .idea/*
 v1/.idea/*
+/v1/.vscode/
