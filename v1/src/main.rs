@@ -1,3 +1,4 @@
+use std::process::Child;
 use bevy::app::{App, AppExit, Plugin, Startup, Update};
 use bevy::input::Input;
 use bevy::math::{vec2, vec3, Vec2, Vec3};
@@ -34,30 +35,39 @@ fn main() {
 #[derive(Resource)]
 struct NebulaTime(Timer);
 
+#[derive(Resource)]
+struct PlayerMovTimer(Timer);
+
 #[derive(Component)]
 struct Item {
     number: i64,
 }
 
 #[derive(Component)]
+struct Movement(f32, bool);
+
+
+// Tags
+#[derive(Component)]
+struct TagCamera;
+
+#[derive(Component)]
 struct Player;
 
 #[derive(Component)]
-struct Movement(f32);
-
-#[derive(Component)]
-struct TagCamera;
+struct GridBox;
 
 #[derive(Component)]
 struct DevText {
     mov_num: f32,
 }
 
+// Grid
 #[derive(Component)]
-struct Grid(String);
+struct ActiveGrid;
 
 #[derive(Component)]
-struct GridBox;
+struct Grid(String);
 
 #[derive(Component)]
 struct GridPos(Vec3);
@@ -86,13 +96,13 @@ fn setup(mut commands: Commands) {
                 ..default()
             },
         )
-        .with_text_alignment(TextAlignment::Left)
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(5.0),
-            left: Val::Px(5.0),
-            ..default()
-        }),
+            .with_text_alignment(TextAlignment::Left)
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                top: Val::Px(5.0),
+                left: Val::Px(5.0),
+                ..default()
+            }),
         DevText { mov_num: 0f32 },
     ));
 
@@ -103,9 +113,11 @@ fn setup(mut commands: Commands) {
             ..default()
         },
         ..default()
-    },));
+    }, ));
 
-    create_grid(&mut commands, GRID_BOX, BOUNDARY_BOX, "MainGrid".into());
+    let world_grid = create_grid(&mut commands, GRID_BOX, BOUNDARY_BOX, "WorldGrid".into());
+    let mut active_grid = commands.spawn((ActiveGrid, SpatialBundle { ..default() }));
+    active_grid.push_children(&[world_grid]);
 
     // player sprite
     commands.spawn((
@@ -119,28 +131,26 @@ fn setup(mut commands: Commands) {
             ..default()
         },
         Player,
-        Movement(0f32),
+        Movement(0f32, false),
         GridPos(Vec3::ZERO),
     ));
 }
 
-fn create_grid(commands: &mut Commands, grid_box: Vec2, boundary_box: Vec2, grid_name: String) {
+fn create_grid(commands: &mut Commands, grid_box: Vec2, boundary_box: Vec2, grid_name: String) -> Entity {
     let grid_x = grid_box.x as usize;
     let grid_y = grid_box.y as usize;
 
     let mut grid = commands.spawn((Grid(grid_name), SpatialBundle { ..default() }));
 
     grid.with_children(|parent| {
-        for x in
-            ((boundary_box.x - grid_box.x) as i32 / -2..boundary_box.x as i32 / 2).step_by(grid_x)
-        {
-            for y in ((boundary_box.y - grid_box.y) as i32 / -2..boundary_box.y as i32 / 2)
-                .step_by(grid_y)
-            {
+        for x in ((boundary_box.x - grid_box.x) as i32 / -2..boundary_box.x as i32 / 2).step_by(grid_x) {
+            for y in ((boundary_box.y - grid_box.y) as i32 / -2..boundary_box.y as i32 / 2).step_by(grid_y) {
                 spawn_box(parent, (x) as f32, (y) as f32);
             }
         }
     });
+
+    grid.id()
 }
 
 fn spawn_box(commands: &mut ChildBuilder, x: f32, y: f32) {
@@ -183,9 +193,7 @@ fn print_dev(
     mut commands: Commands,
     mut count_text: Query<(&mut Text, &mut DevText)>,
     player_query: Query<(&Player, &Movement, &Transform)>,
-    window_query: Query<&Window>,
     grid_parent_q: Query<(&Grid, &Children)>,
-    grid_boxes_q: Query<(&GridBox, &Transform)>,
 ) {
     let mut t = count_text.single_mut();
     let text: &mut String = &mut t.0.sections[0].value;
@@ -206,8 +214,8 @@ fn print_dev(
     let player = player_query.single();
 
     // movement speed counter
-    let mov: f32 = player.1 .0;
-    let mut elapsed = (timer.0.elapsed_secs() * 10.0);
+    let mov: f32 = player.1.0;
+    let mut elapsed = timer.0.elapsed_secs() * 10.0;
     elapsed = elapsed - elapsed.fract();
     if elapsed % 2.0 == 0.0 {
         dev_stats.mov_num = mov;
@@ -238,19 +246,13 @@ fn print_dev(
 
 fn handle_input(
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(
-        &mut Player,
-        &mut Transform,
-        &mut Movement,
-        &Sprite,
-        &mut GridPos,
-    )>,
+    mut query: Query<(&mut Player, &mut Transform, &mut Movement, &Sprite, &mut GridPos)>,
     mut exit: EventWriter<AppExit>,
     time: Res<Time>,
-    timer: Res<NebulaTime>,
+    mut player_mov_timer: ResMut<PlayerMovTimer>,
+    active_grid: Query<(&ActiveGrid, &Children)>
 ) {
-    for (mut player, mut transform, mut mov, sprite, mut gridpos) in query.iter_mut() {
-        let mut pan = Vec2::ZERO;
+    for (_player, mut transform, mut mov, sprite, mut gridpos) in query.iter_mut() {
         let mut distance = Vec3::ZERO;
         let mut grid_mov = Vec3::ZERO;
 
@@ -261,50 +263,49 @@ fn handle_input(
         }
 
         if keys.pressed(KeyCode::Right) {
-            grid_mov.x += 1.0;
+            grid_mov.x = 1.0;
             distance.x += MOVEMENT_SPEED;
         }
 
         if keys.pressed(KeyCode::Left) {
             distance.x += -MOVEMENT_SPEED;
-            grid_mov.x += -1.0;
+            grid_mov.x = -1.0;
         }
 
         if keys.pressed(KeyCode::Up) {
             distance.y += MOVEMENT_SPEED;
-            grid_mov.y += 1.0;
+            grid_mov.y = 1.0;
         }
 
         if keys.pressed(KeyCode::Down) {
-            grid_mov.y += -1.0;
+            grid_mov.y = -1.0;
             distance.y += -MOVEMENT_SPEED;
         }
 
-        let mut elapsed = (timer.0.elapsed_secs() * 10.0);
+        let mut elapsed = player_mov_timer.0.tick(time.delta()).elapsed_secs() * 10.0;
         elapsed = elapsed - elapsed.fract();
 
-        if !distance.eq(&Vec3::ZERO) && elapsed % 2.0 == 0.0 {
-            let movement_clamped = distance.clamp_length_max(MOVEMENT_SPEED);
-            let mov_delta = movement_clamped * time.delta_seconds();
+        if !mov.1 {
+            mov.1 = !mov.1;
 
             //transform.translation += mov_delta;
             let new_grid_pos = gridpos.0 + grid_mov;
             let mut world_mov = vec3((grid_mov.x * GRID_BOX.x), (grid_mov.y * GRID_BOX.y), 0.0)
-                .clamp_length_max(GRID_BOX.length())
-                + transform.translation;
+                .clamp_length_max(GRID_BOX.length());
+            mov.0 = world_mov.length();
+            transform.translation += world_mov;
 
             let player_size = sprite.custom_size.unwrap() / 2.0;
-            world_mov.x = world_mov.x.clamp(
+            transform.translation.x = transform.translation.x.clamp(
                 BOUNDARY_BOX.x / -2.0 + player_size.x,
                 BOUNDARY_BOX.x / 2.0 - player_size.x,
             );
-            world_mov.y = world_mov.y.clamp(
+            transform.translation.y = transform.translation.y.clamp(
                 BOUNDARY_BOX.y / -2.0 + player_size.y,
                 BOUNDARY_BOX.y / 2.0 - player_size.y,
             );
-            transform.translation = world_mov;
 
-            mov.0 = world_mov.length();
+            mov.1 = !mov.1;
         } else {
             mov.0 = 0f32;
         }
@@ -315,8 +316,11 @@ struct NebulaVault;
 
 impl Plugin for NebulaVault {
     fn build(&self, app: &mut App) {
-        app.insert_resource(NebulaTime(Timer::from_seconds(1.0, TimerMode::Repeating)))
-            .add_systems(Update, (print_dev, handle_input))
+        app
+            .insert_resource(PlayerMovTimer(Timer::from_seconds(1.0, TimerMode::Repeating)))
+            .insert_resource(NebulaTime(Timer::from_seconds(1.0, TimerMode::Repeating)))
+            .add_systems(Update, (print_dev))
+            .add_systems(FixedUpdate, handle_input)
             .add_systems(Startup, setup);
     }
 }
