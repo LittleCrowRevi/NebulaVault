@@ -3,13 +3,11 @@ use bevy::input::Input;
 use bevy::math::{vec2, vec3, Vec2, Vec3};
 use bevy::prelude::*;
 use bevy::render::render_resource::encase::private::Length;
-use bevy::sprite::SpriteBundle;
-use bevy::text::{Text, TextAlignment, TextStyle};
+use bevy::sprite::{Anchor, SpriteBundle};
 use bevy::time::{Timer, TimerMode};
 use bevy::ui::{PositionType, Style};
 use bevy::utils::default;
 use bevy::DefaultPlugins;
-use std::process::Child;
 
 const MOVEMENT_SPEED: f32 = 500.0;
 const BOUNDARY_BOX: Vec2 = Vec2::new(500.0, 500.0);
@@ -56,6 +54,26 @@ struct Player;
 #[derive(Component)]
 struct DevText {
     mov_num: f32,
+}
+
+// stats
+#[allow(dead_code)]
+#[derive(Component)]
+struct VitalStats {
+    health: i32,
+    mana: i32,
+    energy: i32,
+}
+
+#[allow(dead_code)]
+#[derive(Component)]
+struct CoreStats {
+    strength: i32,
+    intelligence: i32,
+    agility: i32,
+    constitution: i32,
+    fortune: i32,
+    wisdom: i32,
 }
 
 // Grid
@@ -126,12 +144,45 @@ fn setup(mut commands: Commands) {
                 custom_size: Some(Vec2::new(20.0, 20.0)),
                 ..default()
             },
-            transform: Transform::from_translation(Vec3::new(0.0, 0.0, 1.0)),
+            transform: Transform::from_translation(vec3(0.0, 0.0, 1.0)),
             ..default()
         },
         Player,
         Movement(0f32, false),
         GridPos(vec3(-1.0, -1.0, 1.0)),
+    )).with_children(|parent| {
+        parent.spawn(
+            Text2dBundle {
+                text: Text::from_section(
+                    "@".to_string(),
+                    TextStyle {
+                        font_size: 20.0,
+                        ..default()
+                    },
+
+                ).with_alignment(TextAlignment::Center),
+                text_anchor: Anchor::Center,
+                transform: Transform::from_translation(vec3(0.0, 0.0, 2.0)),
+                ..default()
+            },  
+        );
+    });
+
+    commands.spawn((
+        GridPos(vec3(1.0, 0.0, 1.0)),
+        Text2dBundle {
+            text: Text::from_section(
+                "A".to_string(),
+                TextStyle {
+                    font_size: 20.0,
+                    ..default()
+                },
+                
+            ).with_alignment(TextAlignment::Center),
+            text_anchor: Anchor::Center,
+            transform: Transform::from_translation(vec3(20.0, 0.0, 2.0)),
+            ..default()
+        }
     ));
 }
 
@@ -165,7 +216,7 @@ fn spawn_box(commands: &mut ChildBuilder, x: f32, y: f32) {
                 visibility: Visibility::Visible,
                 ..default()
             },
-                GridBox(vec3((x / GRID_BOX.x).round(), (y / GRID_BOX.y).round(), 1.0)),
+            GridBox(vec3((x / GRID_BOX.x).round(), (y / GRID_BOX.y).round(), 1.0)),
         ))
         .with_children(|parent| {
             parent.spawn(SpriteBundle {
@@ -259,7 +310,6 @@ fn handle_input(
     grid_boxes: Query<(&GridBox, &GlobalTransform), Without<Grid>>,
 ) {
     for (_player, mut transform, mut mov, sprite, mut gridpos) in query.iter_mut() {
-        let mut distance = Vec3::ZERO;
         let mut grid_mov = Vec3::ZERO;
         let mut movable = [true, true];
 
@@ -272,25 +322,21 @@ fn handle_input(
         if keys.just_pressed(KeyCode::Right) && movable[0] {
             movable[0] = false;
             grid_mov.x = 1.0;
-            distance.x += MOVEMENT_SPEED;
         }
 
         if keys.just_pressed(KeyCode::Left) && movable[0] {
             movable[0] = false;
-            distance.x += -MOVEMENT_SPEED;
             grid_mov.x = -1.0;
         }
 
         if keys.just_pressed(KeyCode::Up) && movable[1] {
             movable[1] = false;
-            distance.y += MOVEMENT_SPEED;
             grid_mov.y = 1.0;
         }
 
         if keys.just_pressed(KeyCode::Down) && movable[1] {
             movable[1] = false;
             grid_mov.y = -1.0;
-            distance.y += -MOVEMENT_SPEED;
         }
 
         let mut elapsed = player_mov_timer.0.tick(time.delta()).elapsed_secs() * 10.0;
@@ -299,9 +345,7 @@ fn handle_input(
 
         if !mov.1 && grid_mov != Vec3::ZERO && movable.contains(&false) {
             mov.1 = !mov.1;
-            println!("Grid Mov {} | GridPos: {}", grid_mov, gridpos.0);
             let new_grid_pos = gridpos.0 + grid_mov;
-            println!("New Grid Pos: {}", new_grid_pos);
             let world_mov = vec3((grid_mov.x * GRID_BOX.x), (grid_mov.y * GRID_BOX.y), 0.0)
                 .clamp_length_max(GRID_BOX.length()) + transform.translation;
 
@@ -310,7 +354,6 @@ fn handle_input(
             for (&boxes) in grid.iter() {
                 let grid_box = grid_boxes.get(boxes).unwrap();
                 if grid_box.1.translation().x == world_mov.x && grid_box.1.translation().y == world_mov.y {
-                    println!("Grid_Box: {}", grid_box.0.0);
                     gridpos.0 = new_grid_pos;
                     transform.translation = world_mov;
 
