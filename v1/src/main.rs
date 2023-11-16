@@ -159,12 +159,11 @@ fn setup(mut commands: Commands) {
                         font_size: 20.0,
                         ..default()
                     },
-
                 ).with_alignment(TextAlignment::Center),
                 text_anchor: Anchor::Center,
                 transform: Transform::from_translation(vec3(0.0, 0.0, 2.0)),
                 ..default()
-            },  
+            },
         );
     });
 
@@ -177,7 +176,6 @@ fn setup(mut commands: Commands) {
                     font_size: 20.0,
                     ..default()
                 },
-                
             ).with_alignment(TextAlignment::Center),
             text_anchor: Anchor::Center,
             transform: Transform::from_translation(vec3(20.0, 0.0, 2.0)),
@@ -342,21 +340,23 @@ fn handle_input(
         let mut elapsed = player_mov_timer.0.tick(time.delta()).elapsed_secs() * 10.0;
         elapsed = elapsed - elapsed.fract();
 
-
         if !mov.1 && grid_mov != Vec3::ZERO && movable.contains(&false) {
             mov.1 = !mov.1;
             let new_grid_pos = gridpos.0 + grid_mov;
             let world_mov = vec3((grid_mov.x * GRID_BOX.x), (grid_mov.y * GRID_BOX.y), 0.0)
                 .clamp_length_max(GRID_BOX.length()) + transform.translation;
 
+            // get active grid
             let active_grid = active_grid.single().1.get(0).unwrap();
             let grid = grid.get(*active_grid).unwrap().1;
+
             for (&boxes) in grid.iter() {
                 let grid_box = grid_boxes.get(boxes).unwrap();
                 if grid_box.1.translation().x == world_mov.x && grid_box.1.translation().y == world_mov.y {
                     gridpos.0 = new_grid_pos;
                     transform.translation = world_mov;
 
+                    // clamp to boundary
                     let player_size = sprite.custom_size.unwrap() / 2.0;
                     transform.translation.x = transform.translation.x.clamp(
                         BOUNDARY_BOX.x / -2.0 + player_size.x,
