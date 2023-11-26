@@ -34,8 +34,14 @@ fn main() {
         .run();
 }
 
-#[derive(Resource)]
-struct GameState;
+
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+enum GameState {
+    #[default]
+    MainMenu,
+    Loading,
+    Exploration
+}
 
 #[derive(Resource)]
 struct NebulaTime(Timer);
@@ -166,7 +172,7 @@ fn setup(mut commands: Commands) {
 
     commands.spawn((
         TextBundle::from_section(
-            "HP: 0\nMana: 0\nEnergy: 0",
+            "",
             TextStyle {
                 font_size: 13.0,
                 ..default()
@@ -406,6 +412,7 @@ impl Plugin for NebulaVault {
             1.0,
             TimerMode::Repeating,
         )))
+            .add_state::<GameState>()
             .insert_resource(NebulaTime(Timer::from_seconds(1.0, TimerMode::Repeating)))
             .add_systems(Update, (handle_input, update_hud, print_dev))
             .add_systems(Startup, setup);
