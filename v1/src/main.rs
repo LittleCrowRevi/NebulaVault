@@ -1,3 +1,5 @@
+mod entities;
+
 use bevy::app::{App, AppExit, Plugin, Startup, Update};
 use bevy::input::Input;
 use bevy::math::{vec2, vec3, Vec2, Vec3};
@@ -8,6 +10,8 @@ use bevy::time::{Timer, TimerMode};
 use bevy::ui::{PositionType, Style};
 use bevy::utils::default;
 use bevy::DefaultPlugins;
+use entities::races::*;
+use entities::components::*;
 
 const MOVEMENT_SPEED: f32 = 500.0;
 const BOUNDARY_BOX: Vec2 = Vec2::new(500.0, 500.0);
@@ -29,6 +33,9 @@ fn main() {
         ))
         .run();
 }
+
+#[derive(Resource)]
+struct GameState;
 
 #[derive(Resource)]
 struct NebulaTime(Timer);
@@ -58,26 +65,6 @@ struct DevText {
 
 #[derive(Component)]
 struct hud;
-
-// stats
-#[allow(dead_code)]
-#[derive(Component)]
-struct VitalStats {
-    health: i32,
-    mana: i32,
-    energy: i32,
-}
-
-#[allow(dead_code)]
-#[derive(Component)]
-struct CoreStats {
-    strength: i32,
-    intelligence: i32,
-    agility: i32,
-    constitution: i32,
-    fortune: i32,
-    wisdom: i32,
-}
 
 #[derive(Bundle)]
 struct EntityBundle {
@@ -159,16 +146,7 @@ fn setup(mut commands: Commands) {
         Player,
         Movement(0f32, false),
         GridPos(vec3(-1.0, -1.0, 1.0)),
-        EntityBundle {
-            vital_stats: VitalStats {
-                energy: 100,
-                health: 100,
-                mana: 100
-            },
-            core_stats: CoreStats {
-                agility: 10, constitution: 10, fortune: 10, intelligence: 10, strength: 10, wisdom: 10
-            }
-        }
+        HumanBundle::default(),
     )).with_children(|parent| {
         parent.spawn(
             Text2dBundle {
@@ -221,10 +199,11 @@ fn setup(mut commands: Commands) {
     ));
 }
 
-fn update_hud(query: Query<(&VitalStats), (With<Player>, Changed<VitalStats>)>, mut hud_q: Query<(&mut Text), (With<hud>)>) {
+fn update_hud(query: Query<(&VitalStats, &RaceName), (With<Player>)>, mut hud_q: Query<(&mut Text), (With<hud>)>) {
     let mut hud_text = hud_q.single_mut();
-    let mut p_stats = query.single();
-    hud_text.sections[0].value = format!("Health: {}\nMana: {}\nEnergy: {}", p_stats.health, p_stats.mana, p_stats.energy);
+    let (p_stats, p_race) = query.single();
+    hud_text.sections[0].value = format!("Health: {}\nMana: {}\nEnergy: {}\n", p_stats.health, p_stats.mana, p_stats.energy);
+    hud_text.sections[0].value += &*format!("Race: {}\n", p_race.0);
 }
 
 fn create_grid(
@@ -428,8 +407,7 @@ impl Plugin for NebulaVault {
             TimerMode::Repeating,
         )))
             .insert_resource(NebulaTime(Timer::from_seconds(1.0, TimerMode::Repeating)))
-            .add_systems(Update, handle_input)
-            .add_systems(Update, (print_dev))
+            .add_systems(Update, (handle_input, update_hud, print_dev))
             .add_systems(Startup, setup);
     }
 }
