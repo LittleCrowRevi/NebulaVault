@@ -79,6 +79,12 @@ struct CoreStats {
     wisdom: i32,
 }
 
+#[derive(Bundle)]
+struct EntityBundle {
+    core_stats: CoreStats,
+    vital_stats: VitalStats
+}
+
 // Grid
 #[derive(Component)]
 struct ActiveGrid;
@@ -153,7 +159,16 @@ fn setup(mut commands: Commands) {
         Player,
         Movement(0f32, false),
         GridPos(vec3(-1.0, -1.0, 1.0)),
-        VitalStats { health: 100, mana: 100, energy: 100 }
+        EntityBundle {
+            vital_stats: VitalStats {
+                energy: 100,
+                health: 100,
+                mana: 100
+            },
+            core_stats: CoreStats {
+                agility: 10, constitution: 10, fortune: 10, intelligence: 10, strength: 10, wisdom: 10
+            }
+        }
     )).with_children(|parent| {
         parent.spawn(
             Text2dBundle {
