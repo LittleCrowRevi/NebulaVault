@@ -56,6 +56,9 @@ struct DevText {
     mov_num: f32,
 }
 
+#[derive(Component)]
+struct hud;
+
 // stats
 #[allow(dead_code)]
 #[derive(Component)]
@@ -150,6 +153,7 @@ fn setup(mut commands: Commands) {
         Player,
         Movement(0f32, false),
         GridPos(vec3(-1.0, -1.0, 1.0)),
+        VitalStats { health: 100, mana: 100, energy: 100 }
     )).with_children(|parent| {
         parent.spawn(
             Text2dBundle {
@@ -168,6 +172,24 @@ fn setup(mut commands: Commands) {
     });
 
     commands.spawn((
+        TextBundle::from_section(
+            "HP: 0\nMana: 0\nEnergy: 0",
+            TextStyle {
+                font_size: 13.0,
+                ..default()
+            },
+        ).with_text_alignment(TextAlignment::Left)
+            .with_style(
+                Style {
+                    position_type: PositionType::Absolute,
+                    bottom: Val::Px(5.0),
+                    left: Val::Px(5.0),
+                    ..default()
+                }
+            )
+        , hud));
+
+    commands.spawn((
         GridPos(vec3(1.0, 0.0, 1.0)),
         Text2dBundle {
             text: Text::from_section(
@@ -182,6 +204,12 @@ fn setup(mut commands: Commands) {
             ..default()
         }
     ));
+}
+
+fn update_hud(query: Query<(&VitalStats), (With<Player>, Changed<VitalStats>)>, mut hud_q: Query<(&mut Text), (With<hud>)>) {
+    let mut hud_text = hud_q.single_mut();
+    let mut p_stats = query.single();
+    hud_text.sections[0].value = format!("Health: {}\nMana: {}\nEnergy: {}", p_stats.health, p_stats.mana, p_stats.energy);
 }
 
 fn create_grid(
@@ -298,7 +326,7 @@ fn print_dev(
 }
 
 fn handle_input(
-    mut keys: ResMut<Input<KeyCode>>,
+    keys: Res<Input<KeyCode>>,
     mut query: Query<(&mut Player, &mut Transform, &mut Movement, &Sprite, &mut GridPos)>,
     mut exit: EventWriter<AppExit>,
     time: Res<Time>,
