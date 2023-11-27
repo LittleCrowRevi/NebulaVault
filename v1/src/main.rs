@@ -134,11 +134,11 @@ fn setup(mut commands: Commands) {
         ..default()
     }, ));
 
-    let world_grid = create_grid(&mut commands, GRID_BOX, BOUNDARY_BOX, "WorldGrid".into());
+    let world_grid = create_square_grid(&mut commands, GRID_BOX, BOUNDARY_BOX, "WorldGrid".into());
     let mut active_grid = commands.spawn((ActiveGrid, SpatialBundle { ..default() }));
     active_grid.push_children(&[world_grid]);
 
-    // player sprite
+    // player
     commands.spawn((
         SpriteBundle {
             sprite: Sprite {
@@ -212,7 +212,7 @@ fn update_hud(query: Query<(&VitalStats, &RaceName), (With<Player>)>, mut hud_q:
     hud_text.sections[0].value += &*format!("Race: {}\n", p_race.0);
 }
 
-fn create_grid(
+fn create_square_grid(
     commands: &mut Commands,
     grid_box: Vec2,
     boundary_box: Vec2,

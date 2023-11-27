@@ -44,13 +44,17 @@ impl Default for HumanBundle {
     }
 }
 
-#[derive(Component)]
-pub struct HalfAngel {
+#[derive(Bundle)]
+pub struct HalfAngelBundle {
     pub base_stats: BaseRace,
-    pub name: RaceName
+    pub name: RaceName,
+    pub tag: HalfAngel
 }
 
-impl Default for HalfAngel {
+#[derive(Component)]
+pub struct HalfAngel;
+
+impl Default for HalfAngelBundle {
     fn default() -> Self {
         Self {
             name: RaceName(String::from("Half-Angel")),
@@ -68,7 +72,42 @@ impl Default for HalfAngel {
                     energy: 10,
                     mana: 15
                 }
-            }
+            },
+            tag: HalfAngel
+        }
+    }
+}
+
+#[derive(Bundle)]
+pub struct FaerieBundle {
+    pub base_stats: BaseRace,
+    pub name: RaceName,
+    pub tag: Faerie
+}
+
+#[derive(Component)]
+pub struct Faerie;
+
+impl Default for FaerieBundle {
+    fn default() -> Self {
+        Self {
+            name: RaceName(String::from("Faerie")),
+            base_stats: BaseRace {
+                core: CoreStats {
+                    strength: 6,
+                    agility: 15,
+                    constitution: 6,
+                    fortune: 12,
+                    wisdom: 10,
+                    intelligence: 12
+                },
+                vital: VitalStats {
+                    health: 10,
+                    energy: 5,
+                    mana: 20
+                }
+            },
+            tag: Faerie
         }
     }
 }
