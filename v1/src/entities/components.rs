@@ -42,3 +42,54 @@ impl Default for CoreStats {
         }
     }
 }
+
+// dev
+
+#[derive(Component)]
+pub struct Counter {
+    number: i64,
+}
+
+#[derive(Component)]
+struct Movement(f32, bool);
+
+#[derive(Component)]
+struct DevText {
+    mov_num: f32,
+}
+
+// Tags
+
+#[derive(Component)]
+struct MainCamera;
+
+#[derive(Component)]
+struct Player;
+
+#[derive(Component)]
+struct Enemy;
+
+#[derive(Component)]
+struct HUD;
+
+// Bundles
+
+// Movement
+#[derive(Component)]
+struct MovRequest {
+    entity: Entity,
+    new_pos: Vec3
+}
+
+// Grid
+#[derive(Component)]
+struct ActiveGrid;
+
+#[derive(Component)]
+struct GridBox(Vec3);
+
+#[derive(Component)]
+struct Grid(String);
+
+#[derive(Component)]
+struct GridPositions(Vec<Vec3>);

@@ -1,4 +1,5 @@
 mod entities;
+mod systems;
 
 use bevy::app::{App, AppExit, Plugin, Startup, Update};
 use bevy::input::Input;
@@ -87,9 +88,6 @@ struct GridBox(Vec3);
 
 #[derive(Component)]
 struct Grid(String);
-
-#[derive(Component)]
-struct GridPos(Vec3);
 
 #[derive(Component)]
 struct GridPositions(Vec<Vec3>);
@@ -369,8 +367,6 @@ fn handle_input(
             let new_grid_pos = *current_pos + grid_mov;
             let world_mov = vec3(grid_mov.x * GRID_BOX.x, grid_mov.y * GRID_BOX.y, 0.0)
                 .clamp_length_max(GRID_BOX.length()) + transform.translation;
-
-            
             
             // get active grid
             let active_grid = active_grid.single().1.get(0).unwrap();
@@ -396,10 +392,6 @@ fn handle_input(
             }
         }
     }
-}
-
-fn check_position(point: Vec3, board: ) {
-    
 }
 
 struct NebulaVault;
