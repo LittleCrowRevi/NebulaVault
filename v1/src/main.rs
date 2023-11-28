@@ -91,6 +91,9 @@ struct Grid(String);
 #[derive(Component)]
 struct GridPos(Vec3);
 
+#[derive(Component)]
+struct GridPositions(Vec<Vec3>);
+
 const SCORE_COLOR: Color = Color::rgb(1., 1., 1.);
 
 fn setup(mut commands: Commands) {
@@ -146,12 +149,12 @@ fn setup(mut commands: Commands) {
                 custom_size: Some(Vec2::new(20.0, 20.0)),
                 ..default()
             },
-            transform: Transform::from_translation(vec3(0.0, 0.0, 1.0)),
+            transform: Transform::from_translation(vec3(0.0, 0.0, 3.0)),
             ..default()
         },
         Player,
         Movement(0f32, false),
-        GridPos(vec3(-1.0, -1.0, 1.0)),
+        GridPositions(vec!(vec3(0.0, 0.0, 3.0))),
         HumanBundle::default(),
     )).with_children(|parent| {
         parent.spawn(
@@ -164,7 +167,7 @@ fn setup(mut commands: Commands) {
                     },
                 ).with_alignment(TextAlignment::Center),
                 text_anchor: Anchor::Center,
-                transform: Transform::from_translation(vec3(0.0, 0.0, 2.0)),
+                transform: Transform::from_translation(vec3(0.0, 0.0, 3.0)),
                 ..default()
             },
         );
@@ -189,7 +192,7 @@ fn setup(mut commands: Commands) {
         , hud));
 
     commands.spawn((
-        GridPos(vec3(1.0, 0.0, 1.0)),
+        GridPositions(vec!(vec3(1.0, 0.0, 2.0))),
         Text2dBundle {
             text: Text::from_section(
                 "A".to_string(),
@@ -273,7 +276,7 @@ fn print_dev(
     query: Query<&Item>,
     mut commands: Commands,
     mut count_text: Query<(&mut Text, &mut DevText)>,
-    player_query: Query<(&Player, &Movement, &Transform)>,
+    player_query: Query<(&Player, &Movement, &Transform, &GridPositions)>,
     grid_parent_q: Query<(&Grid, &Children)>,
 ) {
     let mut t = count_text.single_mut();
@@ -310,13 +313,11 @@ fn print_dev(
         "Player Position: x {} | y {} \n",
         position.x, position.y
     ));
-    let grid_position = vec2(
-        (position.x / GRID_BOX.x).round(),
-        (position.y / GRID_BOX.y).round(),
-    );
+    
+    let gird_pos = player.3.0.last().unwrap();
     text.push_str(&*format!(
         "Player Grid Position: x {} | y {} \n",
-        grid_position.x, grid_position.y
+        gird_pos.x, gird_pos.y
     ));
 
     for (grid, children) in grid_parent_q.iter() {
@@ -327,7 +328,7 @@ fn print_dev(
 
 fn handle_input(
     keys: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Player, &mut Transform, &mut Movement, &Sprite, &mut GridPos)>,
+    mut query: Query<(&mut Player, &mut Transform, &mut Movement, &Sprite, &mut GridPositions)>,
     mut exit: EventWriter<AppExit>,
     time: Res<Time>,
     mut player_mov_timer: ResMut<PlayerMovTimer>,
@@ -335,9 +336,9 @@ fn handle_input(
     grid: Query<(&Grid, &Children)>,
     grid_boxes: Query<(&GridBox, &GlobalTransform), Without<Grid>>,
 ) {
-    for (_player, mut transform, mut mov, sprite, mut gridpos) in query.iter_mut() {
+    for (_, mut transform, mut mov, sprite, mut grid_positions) in query.iter_mut() {
+        let current_pos = grid_positions.0.last().expect("[input] GridPos missing.");
         let mut grid_mov = Vec3::ZERO;
-        let mut movable = [true, true];
 
         //TODO: refactor input into config which the user can change
 
@@ -345,43 +346,40 @@ fn handle_input(
             exit.send(AppExit);
         }
 
-        if keys.just_pressed(KeyCode::Right) && movable[0] {
-            movable[0] = false;
+        if keys.just_pressed(KeyCode::Right) {
             grid_mov.x = 1.0;
         }
 
-        if keys.just_pressed(KeyCode::Left) && movable[0] {
-            movable[0] = false;
+        if keys.just_pressed(KeyCode::Left) {
             grid_mov.x = -1.0;
         }
 
-        if keys.just_pressed(KeyCode::Up) && movable[1] {
-            movable[1] = false;
+        if keys.just_pressed(KeyCode::Up) {
             grid_mov.y = 1.0;
         }
 
-        if keys.just_pressed(KeyCode::Down) && movable[1] {
-            movable[1] = false;
+        if keys.just_pressed(KeyCode::Down) {
             grid_mov.y = -1.0;
         }
 
         let mut elapsed = player_mov_timer.0.tick(time.delta()).elapsed_secs() * 10.0;
         elapsed = elapsed - elapsed.fract();
 
-        if !mov.1 && grid_mov != Vec3::ZERO && movable.contains(&false) {
-            mov.1 = !mov.1;
-            let new_grid_pos = gridpos.0 + grid_mov;
-            let world_mov = vec3((grid_mov.x * GRID_BOX.x), (grid_mov.y * GRID_BOX.y), 0.0)
+        if grid_mov != Vec3::ZERO {
+            let new_grid_pos = *current_pos + grid_mov;
+            let world_mov = vec3(grid_mov.x * GRID_BOX.x, grid_mov.y * GRID_BOX.y, 0.0)
                 .clamp_length_max(GRID_BOX.length()) + transform.translation;
 
+            
+            
             // get active grid
             let active_grid = active_grid.single().1.get(0).unwrap();
             let grid = grid.get(*active_grid).unwrap().1;
 
-            for (&boxes) in grid.iter() {
+            for &boxes in grid.iter() {
                 let grid_box = grid_boxes.get(boxes).unwrap();
                 if grid_box.1.translation().x == world_mov.x && grid_box.1.translation().y == world_mov.y {
-                    gridpos.0 = new_grid_pos;
+                    grid_positions.0.push(new_grid_pos);
                     transform.translation = world_mov;
 
                     // clamp to boundary
@@ -396,12 +394,12 @@ fn handle_input(
                     );
                 };
             }
-            for element in movable.iter_mut() { *element = true }
-            mov.1 = !mov.1;
-        } else {
-            mov.0 = 0f32;
         }
     }
+}
+
+fn check_position(point: Vec3, board: ) {
+    
 }
 
 struct NebulaVault;
