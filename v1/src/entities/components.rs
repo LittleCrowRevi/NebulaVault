@@ -72,24 +72,7 @@ struct Enemy;
 #[derive(Component)]
 struct HUD;
 
+#[derive(Component)]
+pub struct C_Entity;
+
 // Bundles
-
-// Movement
-#[derive(Component)]
-struct MovRequest {
-    entity: Entity,
-    new_pos: Vec3
-}
-
-// Grid
-#[derive(Component)]
-struct ActiveGrid;
-
-#[derive(Component)]
-struct GridBox(Vec3);
-
-#[derive(Component)]
-struct Grid(String);
-
-#[derive(Component)]
-struct GridPositions(Vec<Vec3>);
