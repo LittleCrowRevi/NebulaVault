@@ -1,6 +1,8 @@
+use std::process::Command;
 use bevy::math::{vec2, vec3};
 use bevy::prelude::*;
 use bevy::utils::HashMap;
+use rand::prelude::*;
 use crate::GRID_BOX;
 
 #[derive(Resource)]
@@ -25,9 +27,26 @@ pub struct Room {
 }
 
 impl Room {
-    fn default_room() -> Self {
+    pub fn default_room() -> Self {
         Self {
             dim: Rect::from_corners(vec2(0., 0.), vec2(10., 10.))
+        }
+    }
+    pub fn rectange_room() -> Self {
+        Self {
+            dim: Rect::from_corners(vec2(0., 0.), vec2(10., 20.))
+        }
+    }
+    
+    pub fn thiny_room() -> Self {
+        Self {
+            dim: Rect::from_corners(vec2(0., 0.), vec2(5.0, 10.0))
+        }
+    }
+    
+    pub fn thinx_room() -> Self {
+        Self {
+            dim: Rect::from_corners(vec2(0., 0.), vec2(10., 5.))
         }
     }
 }
@@ -47,10 +66,78 @@ pub enum TileType {
     Void
 }
 
-pub fun build() {
-
+pub struct Tree {
+    leaf: Container,
+    lchild: Option<Box<Tree>>,
+    rchild: Option<Box<Tree>>
 }
 
+impl Tree {
+    pub fn get_leafs(self) -> Vec<Container> {
+        return if self.lchild.is_none() && self.rchild.is_none() {
+            vec![self.leaf]
+        } else {
+            let mut v = vec![];
+            v.append(&mut self.lchild.unwrap().get_leafs());
+            v.append(&mut self.rchild.unwrap().get_leafs());
+            v
+        }
+    }
+}
+
+pub fn split_container(container: Container, depth: u32) -> Tree {
+    let mut tree = Tree {
+        leaf: container,
+        lchild: None,
+        rchild: None
+    };
+    
+    if depth != 0 {
+        let (left, right) = random_split(&tree.leaf, thread_rng());
+        tree.lchild = Some(Box::from(split_container(left, depth)));
+        tree.rchild = Some(Box::from(split_container(right, depth)));
+    }
+    
+    return tree
+}
+
+pub fn random_split(container: &Container, mut rng: ThreadRng) -> (Container, Container) {
+    let left: Container; 
+    let right: Container;
+    
+    if rng.gen() {
+        left = Container {
+            x: rng.gen_range(1..container.x),
+            y: container.y
+        };
+        right = Container {
+            x: container.x - left.x,
+            y: container.y
+        };
+    } else {
+        left = Container {
+            x: container.x,
+            y: rng.gen_range(1..container.y),
+        };
+        right = Container {
+            x: container.x,
+            y: container.y - left.y,
+        };
+    }
+    
+    return (left, right)
+}
+
+pub struct Container {
+    pub x: i32,
+    pub y: i32,
+}
+
+impl Container {
+    pub fn paint(self, command: Command) {
+
+    }
+}
 
 // Grid
 #[derive(Component)]
@@ -64,6 +151,8 @@ struct Grid(String);
 
 #[derive(Component)]
 struct GridPositions(Vec<Vec3>);
+
+
 
 fn create_square_grid(
     commands: &mut Commands,
