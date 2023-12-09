@@ -13,6 +13,8 @@ use bevy::utils::default;
 use bevy::DefaultPlugins;
 use entities::races::*;
 use entities::components::*;
+use systems::maps::map_builder::generate_bsp;
+use crate::systems::maps::map_builder::Leaf;
 
 const MOVEMENT_SPEED: f32 = 500.0;
 const BOUNDARY_BOX: Vec2 = Vec2::new(500.0, 500.0);
@@ -93,6 +95,21 @@ struct Grid(String);
 struct GridPositions(Vec<Vec3>);
 
 const SCORE_COLOR: Color = Color::rgb(1., 1., 1.);
+
+fn setup_bsp(mut commands: Commands) {
+
+    // main camera
+    commands.spawn((
+        Camera2dBundle {
+            transform: Transform::from_translation(vec3(0., 0., 0.0)),
+            ..default()
+        },
+        TagCamera,
+    ));
+    
+    spawn_dev_text(&mut commands);
+    generate_bsp(&mut commands);
+}
 
 fn setup(mut commands: Commands) {
     println!("Starting NebulaVault!");
@@ -206,6 +223,28 @@ fn setup(mut commands: Commands) {
     ));
 }
 
+fn spawn_dev_text(commands: &mut Commands) {
+    // dev info text
+    commands.spawn((
+        TextBundle::from_section(
+            "",
+            TextStyle {
+                font_size: 15f32,
+                color: SCORE_COLOR,
+                ..default()
+            },
+        )
+            .with_text_alignment(TextAlignment::Left)
+            .with_style(Style {
+                position_type: PositionType::Absolute,
+                top: Val::Px(5.0),
+                left: Val::Px(5.0),
+                ..default()
+            }),
+        DevText { mov_num: 0f32 },
+    ));
+}
+
 fn update_hud(query: Query<(&VitalStats, &RaceName), (With<Player>)>, mut hud_q: Query<(&mut Text), (With<hud>)>) {
     let mut hud_text = hud_q.single_mut();
     let (p_stats, p_race) = query.single();
@@ -258,7 +297,7 @@ fn spawn_box(commands: &mut ChildBuilder, x: f32, y: f32) {
                 sprite: Sprite {
                     color: Color::rgb(0.15, 0.15, 0.15),
                     custom_size: Some(vec2(
-                        GRID_BOX.x - GRID_BOX.x / GRID_BOX.y,
+                        GRID_BOX.x - GRID_BOX.x / GRID_BOX.x,
                         GRID_BOX.y - GRID_BOX.y / GRID_BOX.y,
                     )),
                     ..default()
@@ -266,6 +305,14 @@ fn spawn_box(commands: &mut ChildBuilder, x: f32, y: f32) {
                 ..default()
             });
         });
+}
+
+fn print_bsp_dev(mut commands: Commands, leafs: Query<&Leaf>, mut dev_text: Query<(&mut Text, &mut DevText)>) {
+    let text = &mut dev_text.single_mut().0.sections[0].value;
+    let l = leafs.iter().count();
+    *text = "DevText\n".to_string();
+    
+    text.push_str(&format!("Leafs: {}\n", l));
 }
 
 fn print_dev(
@@ -404,7 +451,7 @@ impl Plugin for NebulaVault {
         )))
             .add_state::<GameState>()
             .insert_resource(NebulaTime(Timer::from_seconds(1.0, TimerMode::Repeating)))
-            .add_systems(Update, (handle_input, update_hud, print_dev))
-            .add_systems(Startup, setup);
+            .add_systems(Update, (print_bsp_dev))
+            .add_systems(Startup, setup_bsp);
     }
 }

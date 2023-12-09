@@ -1,3 +1,3 @@
 pub mod input;
-mod movement;
-mod maps;
+pub mod movement;
+pub mod maps;
