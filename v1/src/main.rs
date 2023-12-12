@@ -16,7 +16,6 @@ use entities::components::*;
 use systems::maps::map_builder::generate_bsp;
 use crate::systems::maps::map_builder::Leaf;
 
-const MOVEMENT_SPEED: f32 = 500.0;
 const BOUNDARY_BOX: Vec2 = Vec2::new(500.0, 500.0);
 const GRID_BOX: Vec2 = Vec2::new(20.0, 20.0);
 
@@ -114,48 +113,6 @@ fn setup_bsp(mut commands: Commands) {
 fn setup(mut commands: Commands) {
     println!("Starting NebulaVault!");
 
-    // main camera
-    commands.spawn((
-        Camera2dBundle {
-            transform: Transform::default(),
-            ..default()
-        },
-        TagCamera,
-    ));
-
-    // dev info text
-    commands.spawn((
-        TextBundle::from_section(
-            "",
-            TextStyle {
-                font_size: 15f32,
-                color: SCORE_COLOR,
-                ..default()
-            },
-        )
-            .with_text_alignment(TextAlignment::Left)
-            .with_style(Style {
-                position_type: PositionType::Absolute,
-                top: Val::Px(5.0),
-                left: Val::Px(5.0),
-                ..default()
-            }),
-        DevText { mov_num: 0f32 },
-    ));
-
-    commands.spawn((SpriteBundle {
-        sprite: Sprite {
-            color: Color::rgb(0.15, 0.15, 0.15),
-            custom_size: Some(Vec2::new(BOUNDARY_BOX.x, BOUNDARY_BOX.y)),
-            ..default()
-        },
-        ..default()
-    }, ));
-
-    let world_grid = create_square_grid(&mut commands, GRID_BOX, BOUNDARY_BOX, "WorldGrid".into());
-    let mut active_grid = commands.spawn((ActiveGrid, SpatialBundle { ..default() }));
-    active_grid.push_children(&[world_grid]);
-
     // player
     commands.spawn((
         SpriteBundle {
@@ -205,22 +162,6 @@ fn setup(mut commands: Commands) {
                 }
             )
         , hud));
-
-    commands.spawn((
-        GridPositions(vec!(vec3(1.0, 0.0, 2.0))),
-        Text2dBundle {
-            text: Text::from_section(
-                "A".to_string(),
-                TextStyle {
-                    font_size: 20.0,
-                    ..default()
-                },
-            ).with_alignment(TextAlignment::Center),
-            text_anchor: Anchor::Center,
-            transform: Transform::from_translation(vec3(20.0, 0.0, 2.0)),
-            ..default()
-        }
-    ));
 }
 
 fn spawn_dev_text(commands: &mut Commands) {
@@ -313,62 +254,6 @@ fn print_bsp_dev(mut commands: Commands, leafs: Query<&Leaf>, mut dev_text: Quer
     *text = "DevText\n".to_string();
     
     text.push_str(&format!("Leafs: {}\n", l));
-}
-
-fn print_dev(
-    time: Res<Time>,
-    mut timer: ResMut<NebulaTime>,
-    query: Query<&Item>,
-    mut commands: Commands,
-    mut count_text: Query<(&mut Text, &mut DevText)>,
-    player_query: Query<(&Player, &Movement, &Transform, &GridPositions)>,
-    grid_parent_q: Query<(&Grid, &Children)>,
-) {
-    let mut t = count_text.single_mut();
-    let text: &mut String = &mut t.0.sections[0].value;
-    let dev_stats = &mut t.1;
-    *text = "Dev Stats\n".to_string();
-
-    // seconds counter
-    let mut count: i64 = query.iter().count() as i64;
-    if timer.0.tick(time.delta()).just_finished() {
-        count += 1;
-        commands.spawn(Item {
-            number: (count + 1),
-        });
-    };
-    text.push_str(&format!("Seconds: {count}\n"));
-
-    // Player stats
-    let player = player_query.single();
-
-    // movement speed counter
-    let mov: f32 = player.1.0;
-    let mut elapsed = timer.0.elapsed_secs() * 10.0;
-    elapsed = elapsed - elapsed.fract();
-    if elapsed % 2.0 == 0.0 {
-        dev_stats.mov_num = mov;
-    }
-    let mov_text = format!("Speed: {}\n", dev_stats.mov_num);
-    text.push_str(&mov_text);
-
-    // position and grid position
-    let position = player.2.translation;
-    text.push_str(&*format!(
-        "Player Position: x {} | y {} \n",
-        position.x, position.y
-    ));
-    
-    let gird_pos = player.3.0.last().unwrap();
-    text.push_str(&*format!(
-        "Player Grid Position: x {} | y {} \n",
-        gird_pos.x, gird_pos.y
-    ));
-
-    for (grid, children) in grid_parent_q.iter() {
-        let child_boxes = children.length();
-        text.push_str(&*format!("{} Boxes: {}\n", grid.0, child_boxes));
-    }
 }
 
 fn handle_input(

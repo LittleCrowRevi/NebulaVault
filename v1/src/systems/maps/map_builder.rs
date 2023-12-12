@@ -7,7 +7,7 @@ use crate::GRID_BOX;
 
 #[derive(Resource)]
 pub struct Maps {
-    maps: HashMap<String, GridMap>
+    maps: HashMap<String, GridMap>,
 }
 
 pub struct GridMap {
@@ -15,7 +15,7 @@ pub struct GridMap {
     tiles: HashMap<Vec3, Tile>,
     rooms: Vec<Room>,
     name: String,
-    
+
 }
 
 impl GridMap {
@@ -23,7 +23,7 @@ impl GridMap {
 }
 
 pub struct Room {
-    dim: Rect
+    dim: Rect,
 }
 
 impl Room {
@@ -37,13 +37,13 @@ impl Room {
             dim: Rect::from_corners(vec2(0., 0.), vec2(10., 20.))
         }
     }
-    
+
     pub fn thiny_room() -> Self {
         Self {
             dim: Rect::from_corners(vec2(0., 0.), vec2(5.0, 10.0))
         }
     }
-    
+
     pub fn thinx_room() -> Self {
         Self {
             dim: Rect::from_corners(vec2(0., 0.), vec2(10., 5.))
@@ -53,7 +53,7 @@ impl Room {
 
 pub struct Tile {
     tile_type: TileType,
-    entity: Option<Entity>
+    entity: Option<Entity>,
 }
 
 pub enum TileType {
@@ -63,7 +63,7 @@ pub enum TileType {
     NPC,
     Item,
     Object,
-    Void
+    Void,
 }
 
 // Grid
@@ -79,67 +79,10 @@ struct Grid(String);
 #[derive(Component)]
 struct GridPositions(Vec<Vec3>);
 
-
-
-fn create_square_grid(
-    commands: &mut Commands,
-    grid_box: Vec2,
-    boundary_box: Vec2,
-    grid_name: String,
-) -> Entity {
-    let grid_x = grid_box.x as usize;
-    let grid_y = grid_box.y as usize;
-
-    let mut grid = commands.spawn((Grid(grid_name), SpatialBundle { ..default() }));
-
-    grid.with_children(|parent| {
-        for x in ((boundary_box.x - grid_box.x) as i32 / -2..=boundary_box.x as i32 / 2).step_by(grid_x) {
-            for y in ((boundary_box.y - grid_box.y) as i32 / -2..=boundary_box.y as i32 / 2).step_by(grid_y) {
-                spawn_box(parent, (x) as f32, (y) as f32);
-            }
-        }
-    });
-
-    grid.id()
-}
-
-fn spawn_box(commands: &mut ChildBuilder, x: f32, y: f32) {
-    commands
-        .spawn((
-            SpatialBundle {
-                transform: Transform::from_translation(vec3(x, y, 1.0)),
-                visibility: Visibility::Visible,
-                ..default()
-            },
-            GridBox(vec3((x / GRID_BOX.x).round(), (y / GRID_BOX.y).round(), 1.0)),
-        ))
-        .with_children(|parent| {
-            parent.spawn(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(0.2, 0.2, 0.2),
-                    custom_size: Some(vec2(GRID_BOX.x, GRID_BOX.y)),
-                    ..default()
-                },
-                ..default()
-            });
-            parent.spawn(SpriteBundle {
-                sprite: Sprite {
-                    color: Color::rgb(0.15, 0.15, 0.15),
-                    custom_size: Some(vec2(
-                        GRID_BOX.x - GRID_BOX.x / GRID_BOX.x,
-                        GRID_BOX.y - GRID_BOX.y / GRID_BOX.y,
-                    )),
-                    ..default()
-                },
-                ..default()
-            }); 
-        });
-}
-
 pub struct Tree {
     leaf: Leaf,
     lchild: Option<Box<Tree>>,
-    rchild: Option<Box<Tree>>
+    rchild: Option<Box<Tree>>,
 }
 
 impl Tree {
@@ -152,7 +95,7 @@ impl Tree {
             v.append(&mut self.lchild.unwrap().get_leafs());
             v.append(&mut self.rchild.unwrap().get_leafs());
             v
-        }
+        };
     }
 }
 
@@ -160,17 +103,19 @@ pub fn split_leaf(container: Leaf, depth: i16, min: i32) -> Tree {
     let mut tree = Tree {
         leaf: container,
         lchild: None,
-        rchild: None
+        rchild: None,
     };
 
     if depth > 0 && tree.leaf.w > min as f32 && tree.leaf.h > min as f32 {
         let (left, right) = random_split(&tree.leaf, min);
-        println!("Splitted Leafs with depth: {} and sizes: lx {} ly {} lw {} lh {}, rx {} ry {} rw {} rh {}", depth, left.x, left.y, left.w, left.h, right.x, right.y, right.w, right.h);
+        if right.w < min as f32 || right.h < min as f32 {
+            return tree
+        };
         tree.lchild = Some(Box::from(split_leaf(left, depth - 1, min)));
         tree.rchild = Some(Box::from(split_leaf(right, depth - 1, min)));
     }
 
-    return tree
+    return tree;
 }
 
 pub fn random_split(container: &Leaf, min: i32) -> (Leaf, Leaf) {
@@ -178,36 +123,40 @@ pub fn random_split(container: &Leaf, min: i32) -> (Leaf, Leaf) {
     let right: Leaf;
 
     if random() {
-        let lx = thread_rng().gen_range(min..container.w as i32) as f32;
+        let max_width = container.w - min as f32;
+        println!("max_width: {}", max_width);
+        let lw = thread_rng().gen_range(min..=max_width.max(min as f32) as i32) as f32;
         left = Leaf {
-            x: container.x - container.w / 2f32 + lx / 2f32,
+            x: container.x - container.w / 2f32 + lw / 2f32,
             y: container.y,
-            w: lx,
-            h: container.h
+            w: lw,
+            h: container.h,
         };
         right = Leaf {
-            x: container.x + container.w / 2f32 - ((container.w - left.w) / 2f32), 
+            x: container.x + container.w / 2f32 - ((container.w - left.w) / 2f32),
             y: container.y,
             w: container.w - left.w,
-            h: container.h
+            h: container.h,
         };
     } else {
-        let ly = thread_rng().gen_range(min..container.h as i32) as f32;
+        let max_height = container.h - min as f32;
+        let lh = thread_rng().gen_range(min..=max_height.max(min as f32) as i32) as f32;
         left = Leaf {
             x: container.x,
-            y: container.y - container.h / 2f32 + ly / 2f32,
+            y: container.y - container.h / 2f32 + lh / 2f32,
             w: container.w,
-            h: ly,
+            h: lh,
         };
         right = Leaf {
             x: container.x,
             y: container.y + container.h / 2f32 - ((container.h - left.h) / 2f32),
             w: container.w,
-            h: container.h - left.h
+            h: container.h - left.h,
         };
     }
 
-    return (left, right)
+
+    return (left, right);
 }
 
 #[derive(Component)]
@@ -233,7 +182,7 @@ impl Leaf {
         ));
     }
 
-    fn spawn_box(self, commands: &mut Commands) {
+    fn paint_box(self, commands: &mut Commands) {
         let (x, y, w, h) = (self.x, self.y, self.w, self.h);
         commands
             .spawn((
@@ -257,31 +206,31 @@ impl Leaf {
                     sprite: Sprite {
                         color: Color::rgb(0.15, 0.15, 0.15),
                         custom_size: Some(vec2(
-                            w - 10.,
-                            h - 10.,
+                            w - 1.,
+                            h - 1.,
                         )),
                         ..default()
                     },
                     ..default()
-                }); 
+                });
             });
     }
 }
 
 pub fn generate_bsp(commands: &mut Commands) {
     let tree = split_leaf(
-        Leaf { 
-            x: 0f32, 
+        Leaf {
+            x: 0f32,
             y: 0f32,
             h: 1000f32,
             w: 1000f32,
         },
-        5, 
-        100);
-    
+        9,
+        50);
+
     let leafs = tree.get_leafs();
     println!("Leafs: {}", leafs.iter().count());
     for leaf in leafs {
-        leaf.spawn_box(commands);
+        leaf.paint_box(commands);
     }
 }

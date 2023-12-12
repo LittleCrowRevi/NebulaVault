@@ -72,7 +72,4 @@ struct Enemy;
 #[derive(Component)]
 struct HUD;
 
-#[derive(Component)]
-pub struct C_Entity;
-
 // Bundles
