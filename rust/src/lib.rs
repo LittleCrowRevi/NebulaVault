@@ -1,8 +1,8 @@
-use bevy_ecs::component::Component;
-use godot::prelude::*;
-use crate::components::entities::Entities::Human;
-
 extern crate core_star;
+
+use godot::prelude::*;
+
+use crate::components::entities::entities::Human;
 
 mod map_builder;
 mod components;

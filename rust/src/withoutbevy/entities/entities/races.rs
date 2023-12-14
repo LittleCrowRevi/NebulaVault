@@ -1,8 +1,9 @@
 use bevy_ecs::prelude::*;
 use godot::builtin::Vector2;
 use godot::prelude::Vector3;
-use crate::entities::entity::*;
+
 use crate::entities::{ANGEL_SPRITE, PLAYER_SPRITE};
+use crate::entities::entity::*;
 
 #[derive(Component)]
 pub struct RaceName(pub String);

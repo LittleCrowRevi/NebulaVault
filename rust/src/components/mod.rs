@@ -1,10 +1,11 @@
+extern crate core_star;
+
 use core_star::Component;
 use godot::bind::{godot_api, GodotClass};
 use godot::engine::Node;
-use godot::obj::{Base, UserClass, WithBaseField};
+use godot::obj::{Base, WithBaseField};
 use godot::prelude::{INode, ToGodot};
 
-extern crate core_star;
 
 pub mod entities;
 

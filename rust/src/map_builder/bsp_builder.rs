@@ -1,3 +1,6 @@
+#![allow(unused_variables)]
+#![allow(dead_code)]
+
 use bevy_ecs::prelude::*;
 use rand::{random, Rng, thread_rng};
 

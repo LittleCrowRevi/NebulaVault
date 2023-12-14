@@ -13,4 +13,4 @@ proc-macro = true
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 bevy_ecs = "0.12.1"
 rand = "0.8.5"
-core_star = { path = "../core_star" }
+core_star = { git = "https://github.com/LittleCrowRevi/NebulaVault.git", branch = "gogalaxy-macro" }

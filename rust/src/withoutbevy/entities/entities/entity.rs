@@ -2,6 +2,7 @@ use bevy_ecs::prelude::*;
 use godot::builtin::{Vector2, Vector3};
 use godot::engine::{AtlasTexture, ISprite2D, Sprite2D};
 use godot::prelude::*;
+
 use crate::WorldManager;
 
 #[derive(GodotClass)]

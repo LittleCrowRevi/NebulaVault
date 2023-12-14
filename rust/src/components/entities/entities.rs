@@ -1,6 +1,7 @@
 use godot::prelude::*;
-use crate::components::entities::*;
+
 use crate::components::{CoreStats, VitalStats};
+use crate::components::entities::*;
 
 pub struct Human;
 

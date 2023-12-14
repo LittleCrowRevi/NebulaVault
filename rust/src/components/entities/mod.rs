@@ -1,8 +1,9 @@
-pub mod Entities;
-
 use godot::engine::{ISprite2D, Sprite2D};
 use godot::prelude::*;
+
 use crate::components::Component;
+
+pub mod entities;
 
 #[derive(GodotClass)]
 #[class(init, base=Sprite2D)]

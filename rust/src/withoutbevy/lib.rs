@@ -1,9 +1,8 @@
-
-
 use bevy_ecs::prelude::*;
 use bevy_ecs::schedule::ScheduleLabel;
 use godot::engine::{AtlasTexture, CompressedTexture2D, InputEvent, Sprite2D, Texture, Texture2D};
 use godot::prelude::*;
+
 use crate::entities::{ANGEL_SPRITE, PLAYER_SPRITE};
 use crate::entities::entity::{create_entity, Entity};
 
