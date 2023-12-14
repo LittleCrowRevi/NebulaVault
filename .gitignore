@@ -19,3 +19,4 @@ v1/.idea/*
 /v1/.vscode/
 **/.idea/*
 **/.idea
+/godot/libs/
