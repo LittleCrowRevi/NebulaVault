@@ -14,3 +14,7 @@ config/name="NebulaVault"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://icon.svg"
+
+[rendering]
+
+environment/defaults/default_clear_color=Color(0.156863, 0.172549, 0.203922, 1)

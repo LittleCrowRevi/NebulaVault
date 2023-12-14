@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://bfwx2r8u37rc3"]
+
+[ext_resource type="Texture2D" uid="uid://tbhlyk3kgkoo" path="res://resources/tilemap/curses-vector.png" id="1_h3ac0"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a7874"]
+atlas = ExtResource("1_h3ac0")
+region = Rect2(0, 144, 24, 36)
+
+[node name="Node2D" type="WorldManager"]
+_import_path = NodePath("")
+unique_name_in_owner = false
+process_mode = 0
+process_priority = 0
+process_physics_priority = 0
+process_thread_group = 0
+editor_description = ""
+script = null
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(270, 205)
+texture = SubResource("AtlasTexture_a7874")

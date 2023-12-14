@@ -1,8 +1,11 @@
-mod map_builder;
-
-use bevy_ecs::prelude::*;
-use bevy_ecs::schedule::ScheduleLabel;
+use bevy_ecs::component::Component;
 use godot::prelude::*;
+use crate::components::entities::Entities::Human;
+
+extern crate core_star;
+
+mod map_builder;
+mod components;
 
 struct NebulaVault;
 
@@ -10,41 +13,17 @@ struct NebulaVault;
 unsafe impl ExtensionLibrary for NebulaVault {}
 
 #[derive(GodotClass)]
-#[class(base=Node2D)]
-pub struct WorldManager {
-    world: World,
-    schedule: Schedule,
-    
+#[class(base=Node2D, init)]
+struct Galaxy {
     #[base]
-    node: Base<Node2D>,
-    
+    base: Base<Node2D>
 }
 
 #[godot_api]
-impl INode2D for WorldManager {
-    fn init(base: Base<Self::Base>) -> Self {
-        godot_print!("Hello, world!");
-        
-        let mut world = World::new();
-
-        let mut schedule = Schedule::new(MainLoop);
-        schedule.add_systems(test_system);
-        
-        Self {
-            node: base,
-            world,
-            schedule
-        }
-    }
-
-    fn process(&mut self, delta: f64) {
-        self.schedule.run(&mut self.world)
+impl INode2D for Galaxy {
+    fn ready(&mut self) {
+        let human = Human::default();
+        self.base.add_child(human.upcast());
     }
 }
 
-#[derive(ScheduleLabel, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct MainLoop;
-
-pub fn test_system() {
-    godot_print!("hallo from bevy!");
-}
