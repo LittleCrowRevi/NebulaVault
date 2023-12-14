@@ -1,17 +1,17 @@
 #![allow(unused_variables)]
+
 #![allow(dead_code)]
 
-use bevy_ecs::prelude::*;
 use rand::{random, Rng, thread_rng};
 
-#[derive(Event)]
+
 pub struct EventGrowBSPTree {
     seed: Leaf,
     depth: i16,
     min: i32
 }
 
-#[derive(Component, Clone)]
+#[derive(Clone)]
 pub struct Leaf {
     pub x: f32,
     pub y: f32,
@@ -21,7 +21,7 @@ pub struct Leaf {
 
 impl Leaf {
 
-    fn paint_box(self, commands: &mut Commands) {
+    fn paint_box(self) {
         
     }
 }

@@ -27,7 +27,7 @@ pub struct VitalStats {
 #[godot_api]
 impl INode for VitalStats {
     fn ready(&mut self) {
-        self.to_gd().set_name("VitalStatsComponent".into());
+        self.to_gd().set_name("C_VitalStats".into());
     }
     
     fn exit_tree(&mut self) {
@@ -53,7 +53,7 @@ pub struct CoreStats {
 #[godot_api]
 impl INode for CoreStats {
     fn ready(&mut self) {
-        self.to_gd().set_name("VitalStatsComponent".into());
+        self.to_gd().set_name("C_CoreStats".into());
     }
     
     fn exit_tree(&mut self) {
