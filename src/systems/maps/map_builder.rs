@@ -78,7 +78,6 @@ impl Tree {
             vec![self.leaf]
         } else {
             let mut v = vec![];
-            //v.push(self.leaf);
             v.append(&mut self.lchild.unwrap().get_leafs());
             v.append(&mut self.rchild.unwrap().get_leafs());
             v
@@ -111,7 +110,6 @@ pub fn random_split(container: &Leaf, min: i32, mut rng: ChaCha20Rng) -> (Leaf, 
 
     if random() {
         let max_width = container.w - min as f32;
-        println!("max_width: {}", max_width);
         let lw = rng.gen_range(min..=max_width.max(min as f32) as i32) as f32;
         left = Leaf {
             x: container.x - container.w / 2f32 + lw / 2f32,
@@ -156,7 +154,7 @@ pub struct Leaf {
 impl Leaf {
     fn paint_box(self, commands: &mut Commands, color: Color, z_index: f32, border: f32) {
         let (x, y, w, h) = (self.x, self.y, self.w, self.h);
-        let mut leaf = commands.spawn((
+        commands.spawn((
             SpriteBundle {
                 transform: Transform::from_translation(vec3(x, y, z_index)),
                 visibility: Visibility::Visible,

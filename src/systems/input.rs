@@ -1,7 +1,6 @@
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
-use bevy::utils::tracing::event;
-use crate::systems::maps::map_builder::{EventGrowBSPTree, Leaf};
+use crate::systems::maps::map_builder::{EventGrowBSPTree};
 use crate::systems::maps::LEAF_DEV;
 use crate::TagCamera;
 
