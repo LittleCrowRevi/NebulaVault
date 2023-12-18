@@ -4,6 +4,7 @@ use bevy::utils::HashMap;
 use rand::prelude::*;
 use rand_chacha::ChaCha20Rng;
 use std::process::Command;
+use crate::systems::maps::TILE_SIZE;
 
 #[derive(Resource)]
 pub struct Maps {
@@ -21,6 +22,7 @@ impl GridMap {
     fn move_to_unoccupied() {}
 }
 
+#[derive(Component)]
 pub struct Room {
     dim: Rect,
 }
@@ -59,7 +61,7 @@ pub enum TileType {
     Wall,
     Player,
     Enemy,
-    NPC,
+    Npc,
     Item,
     Object,
     Void,
@@ -85,16 +87,16 @@ impl Tree {
     }
 }
 
-pub fn split_leaf(container: &Leaf, depth: i16, min: i32, rng: ChaCha20Rng) -> Tree {
+pub fn split_leaf(container: &Leaf, depth: i16, min: i32, rng: [u8; 32]) -> Tree {
     let mut tree = Tree {
         leaf: *container,
         lchild: None,
         rchild: None,
     };
 
-    if depth > 0 && tree.leaf.w > min as f32 && tree.leaf.h > min as f32 {
-        let (left, right) = random_split(&tree.leaf, min, rng.clone());
-        if right.w < min as f32 || right.h < min as f32 {
+    if depth > 0 && tree.leaf.w > min && tree.leaf.h > min {
+        let (left, right) = random_split(&tree.leaf, min, rng);
+        if right.w < min || right.h < min {
             return tree;
         };
         tree.lchild = Some(Box::from(split_leaf(&left, depth - 1, min, rng.clone())));
@@ -104,37 +106,63 @@ pub fn split_leaf(container: &Leaf, depth: i16, min: i32, rng: ChaCha20Rng) -> T
     tree
 }
 
-pub fn random_split(container: &Leaf, min: i32, mut rng: ChaCha20Rng) -> (Leaf, Leaf) {
+pub fn generate_room(container: &Leaf, rng: [u8; 32], commands: &mut Commands, color: Color) {
+    //if let Some(l_leaf) = container.lchild.as_ref() { generate_room(l_leaf) }
+    //if let Some(r_leaf) = container.rchild.as_ref() { generate_room(r_leaf) }
+    let max_w = container.w - TILE_SIZE.0;
+    let max_h = container.h - TILE_SIZE.1;
+
+    let rand_w = ChaCha20Rng::from_seed(rng).gen_range(TILE_SIZE.0 * 2..=max_w);
+    let rand_h = ChaCha20Rng::from_seed(rng).gen_range(TILE_SIZE.1 * 2..=max_h);
+
+    commands.spawn((
+        SpriteBundle {
+            transform: Transform::from_translation(vec3(container.x as f32, container.y as f32, 3.)),
+            visibility: Visibility::Visible,
+            sprite: Sprite {
+                color,
+                custom_size: Some(vec2(rand_w as f32, rand_h as f32)),
+                ..default()
+            },
+            ..default()
+        },
+        Room {
+            dim: Rect::from_corners(Vec2::ZERO, vec2(rand_w as f32, rand_h as f32)),
+        }
+    ));
+}
+
+pub fn random_split(container: &Leaf, min: i32, rng: [u8; 32]) -> (Leaf, Leaf) {
     let left: Leaf;
     let right: Leaf;
 
     if random() {
-        let max_width = container.w - min as f32;
-        let lw = rng.gen_range(min..=max_width.max(min as f32) as i32) as f32;
+        let max_width = container.w - min;
+        let lw = ChaCha20Rng::from_seed(rng).gen_range(min..=max_width.max(min));
         left = Leaf {
-            x: container.x - container.w / 2f32 + lw / 2f32,
+            x: container.x - container.w / 2 + lw / 2,
             y: container.y,
             w: lw,
             h: container.h,
         };
         right = Leaf {
-            x: container.x + container.w / 2f32 - ((container.w - left.w) / 2f32),
+            x: container.x + container.w / 2 - ((container.w - left.w) / 2),
             y: container.y,
             w: container.w - left.w,
             h: container.h,
         };
     } else {
-        let max_height = container.h - min as f32;
-        let lh = thread_rng().gen_range(min..=max_height.max(min as f32) as i32) as f32;
+        let max_height = container.h - min;
+        let lh = thread_rng().gen_range(min..=max_height.max(min));
         left = Leaf {
             x: container.x,
-            y: container.y - container.h / 2f32 + lh / 2f32,
+            y: container.y - container.h / 2 + lh / 2,
             w: container.w,
             h: lh,
         };
         right = Leaf {
             x: container.x,
-            y: container.y + container.h / 2f32 - ((container.h - left.h) / 2f32),
+            y: container.y + container.h / 2 - ((container.h - left.h) / 2),
             w: container.w,
             h: container.h - left.h,
         };
@@ -145,15 +173,15 @@ pub fn random_split(container: &Leaf, min: i32, mut rng: ChaCha20Rng) -> (Leaf, 
 
 #[derive(Component, Clone, Debug, Copy)]
 pub struct Leaf {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
+    pub x: i32,
+    pub y: i32,
+    pub w: i32,
+    pub h: i32,
 }
 
 impl Leaf {
     fn paint_box(self, commands: &mut Commands, color: Color, z_index: f32, border: f32) {
-        let (x, y, w, h) = (self.x, self.y, self.w, self.h);
+        let (x, y, w, h) = (self.x as f32, self.y as f32, self.w as f32, self.h as f32);
         commands.spawn((
             SpriteBundle {
                 transform: Transform::from_translation(vec3(x, y, z_index)),
@@ -169,18 +197,21 @@ impl Leaf {
         ));
     }
 
-    pub fn area(&self) -> f32 {
+    pub fn area(&self) -> i32 {
         self.w * self.h
     }
 }
 
 pub fn generate_bsp(commands: &mut Commands, seed: &Leaf, depth: i16, min: i32) {
-    let rng = ChaCha20Rng::from_entropy();
+    let rng = ChaCha20Rng::from_entropy().get_seed();
     let tree = split_leaf(seed, depth, min, rng);
 
     let leafs = tree.clone().get_leafs();
     tree.leaf.paint_box(commands, Color::rgb(0.5, 0.5, 0.5), -1.0, 0.0);
-    leafs.iter().for_each(|leaf| leaf.paint_box(commands, Color::rgb(0.15, 0.15, 0.15), 0.0, 5.0));
+    for leaf in &leafs {
+        leaf.paint_box(commands, Color::rgb(0.15, 0.15, 0.15), 0.0, 10.0);
+        generate_room(leaf, rng, commands, Color::rgb(0.25, 0.25, 0.25));
+    }
 }
 
 #[derive(Event)]
@@ -194,8 +225,10 @@ pub fn redraw_map(
     mut commands: Commands,
     mut ev_tree_grow: EventReader<EventGrowBSPTree>,
     leafs: Query<Entity, With<Leaf>>,
+    rooms: Query<Entity, With<Room>>,
 ) {
     for ev in ev_tree_grow.read() {
+        rooms.for_each(|e| commands.entity(e).despawn_recursive());
         leafs.for_each(|e| commands.entity(e).despawn_recursive());
         generate_bsp(&mut commands, &ev.seed, ev.depth, ev.min);
     }

@@ -28,7 +28,7 @@ fn main() {
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
                     title: String::from("Nebula Vault"),
-                    resolution: (800.0, 600.0).into(),
+                    resolution: (1600.0, 800.0).into(),
                     ..default()
                 }),
                 ..default()
