@@ -87,33 +87,33 @@ impl Tree {
     }
 }
 
-pub fn split_leaf(container: &Leaf, depth: i16, min: i32, rng: [u8; 32]) -> Tree {
+pub fn split_leaf(container: &Leaf, depth: i16, min: (i32, i32), rng: [u8; 32]) -> Tree {
     let mut tree = Tree {
         leaf: *container,
         lchild: None,
         rchild: None,
     };
 
-    if depth > 0 && tree.leaf.w > min && tree.leaf.h > min {
+    if depth > 0 && tree.leaf.w > min.0 && tree.leaf.h > min.1 {
         let (left, right) = random_split(&tree.leaf, min, rng);
-        if right.w < min || right.h < min {
+        if right.w < min.0 || right.h < min.1 || ChaCha20Rng::from_seed(rng).gen_bool(0.3) {
             return tree;
         };
-        tree.lchild = Some(Box::from(split_leaf(&left, depth - 1, min, rng.clone())));
+        
+        tree.lchild = Some(Box::from(split_leaf(&left, depth - 1, min, rng)));
         tree.rchild = Some(Box::from(split_leaf(&right, depth - 1, min, rng)));
     }
-
     tree
 }
 
 pub fn generate_room(container: &Leaf, rng: [u8; 32], commands: &mut Commands, color: Color) {
     //if let Some(l_leaf) = container.lchild.as_ref() { generate_room(l_leaf) }
     //if let Some(r_leaf) = container.rchild.as_ref() { generate_room(r_leaf) }
-    let max_w = container.w - TILE_SIZE.0;
-    let max_h = container.h - TILE_SIZE.1;
+    let max_w = container.w - TILE_SIZE.0 * 3;
+    let max_h = container.h - TILE_SIZE.1 * 3;
 
-    let rand_w = ChaCha20Rng::from_seed(rng).gen_range(TILE_SIZE.0 * 2..=max_w);
-    let rand_h = ChaCha20Rng::from_seed(rng).gen_range(TILE_SIZE.1 * 2..=max_h);
+    let rand_w = ChaCha20Rng::from_seed(rng).gen_range(TILE_SIZE.0..=max_w.max(TILE_SIZE.0));
+    let rand_h = ChaCha20Rng::from_seed(rng).gen_range(TILE_SIZE.1..=max_h.max(TILE_SIZE.1));
 
     commands.spawn((
         SpriteBundle {
@@ -132,13 +132,13 @@ pub fn generate_room(container: &Leaf, rng: [u8; 32], commands: &mut Commands, c
     ));
 }
 
-pub fn random_split(container: &Leaf, min: i32, rng: [u8; 32]) -> (Leaf, Leaf) {
+pub fn random_split(container: &Leaf, min: (i32, i32), rng: [u8; 32]) -> (Leaf, Leaf) {
     let left: Leaf;
     let right: Leaf;
 
     if random() {
-        let max_width = container.w - min;
-        let lw = ChaCha20Rng::from_seed(rng).gen_range(min..=max_width.max(min));
+        let max_width = container.w - min.0;
+        let lw = ChaCha20Rng::from_seed(rng).gen_range(min.0..=max_width.max(min.0));
         left = Leaf {
             x: container.x - container.w / 2 + lw / 2,
             y: container.y,
@@ -152,8 +152,8 @@ pub fn random_split(container: &Leaf, min: i32, rng: [u8; 32]) -> (Leaf, Leaf) {
             h: container.h,
         };
     } else {
-        let max_height = container.h - min;
-        let lh = thread_rng().gen_range(min..=max_height.max(min));
+        let max_height = container.h - min.1;
+        let lh = thread_rng().gen_range(min.1..=max_height.max(min.1));
         left = Leaf {
             x: container.x,
             y: container.y - container.h / 2 + lh / 2,
@@ -202,11 +202,13 @@ impl Leaf {
     }
 }
 
-pub fn generate_bsp(commands: &mut Commands, seed: &Leaf, depth: i16, min: i32) {
+pub fn generate_bsp(commands: &mut Commands, seed: &Leaf, depth: i16, min: (i32, i32)) {
     let rng = ChaCha20Rng::from_entropy().get_seed();
     let tree = split_leaf(seed, depth, min, rng);
 
     let leafs = tree.clone().get_leafs();
+    if leafs.len() <= 1 { return generate_bsp(commands, seed, depth, min); }
+    
     tree.leaf.paint_box(commands, Color::rgb(0.5, 0.5, 0.5), -1.0, 0.0);
     for leaf in &leafs {
         leaf.paint_box(commands, Color::rgb(0.15, 0.15, 0.15), 0.0, 10.0);
@@ -218,7 +220,7 @@ pub fn generate_bsp(commands: &mut Commands, seed: &Leaf, depth: i16, min: i32) 
 pub struct EventGrowBSPTree {
     pub(crate) seed: Leaf,
     pub(crate) depth: i16,
-    pub(crate) min: i32,
+    pub(crate) min: (i32, i32),
 }
 
 pub fn redraw_map(

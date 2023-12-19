@@ -6,4 +6,4 @@ pub mod map_builder;
 
 pub const TILE_SIZE: (i32, i32) = (32, 48);
 
-pub const LEAF_DEV: EventGrowBSPTree = EventGrowBSPTree  {seed: Leaf { x: 0, y: 0, w: 10000, h: 10000}, min: 1500, depth: 7};
+pub const LEAF_DEV: EventGrowBSPTree = EventGrowBSPTree  {seed: Leaf { x: 0, y: 0, w: 800, h: 500}, min: (TILE_SIZE.0*2, TILE_SIZE.1*2), depth: 3};

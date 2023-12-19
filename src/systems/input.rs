@@ -24,6 +24,6 @@ pub fn input(
             let mut log_scale = c.scale.ln();
             log_scale +=  if ev.y > 0. { -0.1 } else { 0.1 };
             c.scale = log_scale.exp();
-        })
-    })
+        });
+    });
 }
