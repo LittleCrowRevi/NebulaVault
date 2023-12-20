@@ -2,7 +2,7 @@ use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use crate::systems::maps::map_builder::{EventGrowBSPTree};
 use crate::systems::maps::LEAF_DEV;
-use crate::TagCamera;
+use crate::MainCamera;
 
 pub fn handle_movement(
     mov_request: Query<()>
@@ -14,7 +14,7 @@ pub fn input(
     keys: Res<Input<KeyCode>>,
     mut e_redraw: EventWriter<EventGrowBSPTree>,
     mut mouse: EventReader<MouseWheel>,
-    mut camera: Query<&mut OrthographicProjection, With<TagCamera>>
+    mut camera: Query<&mut OrthographicProjection, With<MainCamera>>
 ) {
     if keys.just_pressed(KeyCode::Space) {
         e_redraw.send(LEAF_DEV);

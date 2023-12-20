@@ -42,34 +42,3 @@ impl Default for CoreStats {
         }
     }
 }
-
-// dev
-
-#[derive(Component)]
-pub struct Counter {
-    number: i64,
-}
-
-#[derive(Component)]
-struct Movement(f32, bool);
-
-#[derive(Component)]
-struct DevText {
-    mov_num: f32,
-}
-
-// Tags
-
-#[derive(Component)]
-struct MainCamera;
-
-#[derive(Component)]
-struct Player;
-
-#[derive(Component)]
-struct Enemy;
-
-#[derive(Component)]
-struct HUD;
-
-// Bundles

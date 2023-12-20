@@ -55,10 +55,7 @@ struct PlayerMovTimer(Timer);
 
 // Tags
 #[derive(Component)]
-struct TagCamera;
-
-#[derive(Component)]
-struct Player;
+struct MainCamera;
 
 #[derive(Component)]
 struct DevText {}
@@ -73,7 +70,7 @@ fn setup_bsp(mut commands: Commands, mut t_event: EventWriter<EventGrowBSPTree>)
             transform: Transform::from_translation(vec3(0., 0., 0.0)),
             ..default()
         },
-        TagCamera,
+        MainCamera,
     ));
     
     spawn_dev_text(&mut commands);
