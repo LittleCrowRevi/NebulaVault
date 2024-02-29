@@ -104,7 +104,7 @@ fn print_bsp_dev(mut commands: Commands, leafs: Query<&Leaf>, mut dev_text: Quer
     let l = leafs.iter().len();
     *text = "DevText\n".to_string();
     
-    text.push_str(&format!("Leafs: {}\n", l));
+    text.push_str(&format!("Leafs: {l}\n"));
 }
 
 struct NebulaVault;

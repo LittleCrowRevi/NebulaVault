@@ -109,8 +109,8 @@ pub fn split_leaf(container: &Leaf, depth: i16, min: (i32, i32), rng: [u8; 32]) 
 pub fn generate_room(container: &Leaf, rng: [u8; 32], commands: &mut Commands, color: Color) {
     //if let Some(l_leaf) = container.lchild.as_ref() { generate_room(l_leaf) }
     //if let Some(r_leaf) = container.rchild.as_ref() { generate_room(r_leaf) }
-    let max_w = container.w - TILE_SIZE.0 * 3;
-    let max_h = container.h - TILE_SIZE.1 * 3;
+    let max_w = container.w - TILE_SIZE.0;
+    let max_h = container.h - TILE_SIZE.1;
 
     let rand_w = ChaCha20Rng::from_seed(rng).gen_range(TILE_SIZE.0..=max_w.max(TILE_SIZE.0));
     let rand_h = ChaCha20Rng::from_seed(rng).gen_range(TILE_SIZE.1..=max_h.max(TILE_SIZE.1));
