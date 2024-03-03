@@ -4,12 +4,6 @@ use crate::systems::maps::map_builder::{EventGrowBSPTree};
 use crate::systems::maps::LEAF_DEV;
 use crate::MainCamera;
 
-pub fn handle_movement(
-    mov_request: Query<()>
-) {
-    
-}
-
 pub fn input(
     keys: Res<Input<KeyCode>>,
     mut e_redraw: EventWriter<EventGrowBSPTree>,

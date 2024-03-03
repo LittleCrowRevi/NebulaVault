@@ -99,7 +99,7 @@ pub fn split_leaf(container: &Leaf, depth: i16, min: (i32, i32), rng: [u8; 32]) 
         if right.w < min.0 || right.h < min.1 || ChaCha20Rng::from_seed(rng).gen_bool(0.3) {
             return tree;
         };
-        
+
         tree.lchild = Some(Box::from(split_leaf(&left, depth - 1, min, rng)));
         tree.rchild = Some(Box::from(split_leaf(&right, depth - 1, min, rng)));
     }
@@ -208,7 +208,7 @@ pub fn generate_bsp(commands: &mut Commands, seed: &Leaf, depth: i16, min: (i32,
 
     let leafs = tree.clone().get_leafs();
     if leafs.len() <= 1 { return generate_bsp(commands, seed, depth, min); }
-    
+
     tree.leaf.paint_box(commands, Color::rgb(0.5, 0.5, 0.5), -1.0, 0.0);
     for leaf in &leafs {
         leaf.paint_box(commands, Color::rgb(0.15, 0.15, 0.15), 0.0, 10.0);

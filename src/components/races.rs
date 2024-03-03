@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use crate::entities::components::*;
+use crate::components::*;
+use crate::components::{CoreStats, VitalStats};
 
 #[derive(Bundle)]
 pub struct BaseRace {
