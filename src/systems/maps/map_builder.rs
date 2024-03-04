@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::utils::HashMap;
 use rand::prelude::*;
 use rand_chacha::ChaCha20Rng;
-use std::process::Command;
+
 use crate::systems::maps::TILE_SIZE;
 
 #[derive(Resource)]
@@ -117,7 +117,11 @@ pub fn generate_room(container: &Leaf, rng: [u8; 32], commands: &mut Commands, c
 
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_translation(vec3(container.x as f32, container.y as f32, 3.)),
+            transform: Transform::from_translation(vec3(
+                container.x as f32,
+                container.y as f32,
+                3.,
+            )),
             visibility: Visibility::Visible,
             sprite: Sprite {
                 color,
@@ -128,7 +132,7 @@ pub fn generate_room(container: &Leaf, rng: [u8; 32], commands: &mut Commands, c
         },
         Room {
             dim: Rect::from_corners(Vec2::ZERO, vec2(rand_w as f32, rand_h as f32)),
-        }
+        },
     ));
 }
 
@@ -207,9 +211,12 @@ pub fn generate_bsp(commands: &mut Commands, seed: &Leaf, depth: i16, min: (i32,
     let tree = split_leaf(seed, depth, min, rng);
 
     let leafs = tree.clone().get_leafs();
-    if leafs.len() <= 1 { return generate_bsp(commands, seed, depth, min); }
+    if leafs.len() <= 1 {
+        return generate_bsp(commands, seed, depth, min);
+    }
 
-    tree.leaf.paint_box(commands, Color::rgb(0.5, 0.5, 0.5), -1.0, 0.0);
+    tree.leaf
+        .paint_box(commands, Color::rgb(0.5, 0.5, 0.5), -1.0, 0.0);
     for leaf in &leafs {
         leaf.paint_box(commands, Color::rgb(0.15, 0.15, 0.15), 0.0, 10.0);
         generate_room(leaf, rng, commands, Color::rgb(0.25, 0.25, 0.25));

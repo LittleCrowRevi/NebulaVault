@@ -1,12 +1,13 @@
-use crate::components::Renderable as OtherRenderable;
 use bevy::math::ivec2;
 use bevy::prelude::*;
 use bevy_ascii_terminal::Tile;
-use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
+use bevy_inspector_egui::prelude::*;
 
-pub mod races;
+use crate::components::Renderable as OtherRenderable;
+
 pub mod bundles;
+pub mod races;
 
 #[derive(Component, Reflect, InspectorOptions)]
 #[reflect(InspectorOptions)]
@@ -74,4 +75,3 @@ impl Default for CoreStats {
 
 #[derive(Component)]
 pub struct PlayerMarker;
-
