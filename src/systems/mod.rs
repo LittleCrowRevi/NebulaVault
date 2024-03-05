@@ -1,3 +1,3 @@
 pub mod input;
-pub mod maps;
+pub mod map_gen;
 pub mod movement;
