@@ -29,13 +29,14 @@ pub const LEAF_DEV: EventGrowBSPTree = EventGrowBSPTree {
 
 #[derive(Component, Debug, Reflect, InspectorOptions)]
 #[reflect(InspectorOptions)]
-pub struct Map(pub Vec<TileType>);
+pub struct Map(pub Vec<TileType>, pub Vec<Rect>);
 
-pub fn xy_idx(x: i32, y: i32) -> usize {
-    ((y * 80) + x) as usize
-}
+pub fn xy_idx(x: i32, y: i32) -> usize { ((y * 80) + x) as usize }
 
 pub fn apply_room_to_map(mut map: &mut Vec<TileType>, room: &Rect) {
+    if true {
+        true
+    }
     for y in room.y1..=room.y2 {
         for x in room.x1..=room.x2 {
             map[xy_idx(x, y)] = TileType::Floor;
@@ -67,7 +68,16 @@ pub fn apply_vtunnel(map: &mut Vec<TileType>, y1: i32, y2: i32, x: i32, width: i
     }
 }
 
-pub fn new_map_rooms_coors() -> Vec<TileType> {
+pub fn generate_room(min_size: i32, max_size: i32) -> Rect {
+    let mut rng = thread_rng();
+    let w = rng.gen_range(min_size..max_size);
+    let h = rng.gen_range(min_size..max_size);
+    let x = rng.gen_range(min_size..max_size);
+    let y = rng.gen_range(min_size..max_size);
+    Rect::new(x, y, w, h)
+}
+
+pub fn new_map_rooms_coors() -> (Vec<TileType>, Vec<Rect>) {
     let mut map = vec![TileType::Wall; (DEVMAP_SIZE.x() * DEVMAP_SIZE.y()) as usize];
 
     let mut rooms: Vec<Rect> = Vec::new();
@@ -77,19 +87,31 @@ pub fn new_map_rooms_coors() -> Vec<TileType> {
 
     let mut rng = thread_rng();
 
-    for _ in 0..MAX_ROOMS {}
-    let room1 = Rect::new(20, 15, 10, 15);
-    let room2 = Rect::new(35, 15, 10, 15);
-    let room3 = Rect::new(20, 40, 10, 5);
+    for _ in 0..MAX_ROOMS {
+        let mut n_room = generate_room(MIN_SIZE, MAX_SIZE);
 
-    apply_room_to_map(&mut map, &room1);
-    apply_room_to_map(&mut map, &room2);
-    apply_room_to_map(&mut map, &room3);
+        if !rng.gen_bool(0.9) || rooms.iter().any(|r| n_room.intersect(r)) {
+            continue;
+        }
 
-    apply_htunnel(&mut map, 30, 35, 20, 3);
-    apply_vtunnel(&mut map, 30, 40, 25, 2);
+        apply_room_to_map(&mut map, room);
+        printf();
 
-    map
+        if !rooms.is_empty() {
+            let (nx, ny) = n_room.center();
+            let (px, py) = rooms[rooms.len() - 1].center();
+            if rng.gen_bool(0.5) {
+                apply_htunnel(&mut map, px, nx, py, rng.gen_range(1..3));
+                apply_vtunnel(&mut map, py, ny, px, rng.gen_range(1..3));
+            } else {
+                apply_vtunnel(&mut map, py, ny, px, rng.gen_range(1..3));
+                apply_htunnel(&mut map, px, nx, py, rng.gen_range(1..3));
+            }
+        }
+        rooms.push(n_room);
+    }
+
+    (map, rooms)
 }
 
 /// Makes a map with solid boundaries and 400 randomly placed walls. No guarantees that it won't

@@ -1,27 +1,26 @@
 #![warn(clippy::pedantic)]
 
 use bevy::app::{App, Plugin, Startup};
-use bevy::DefaultPlugins;
 use bevy::math::{ivec2, vec3};
 use bevy::prelude::*;
 use bevy::render::render_resource::encase::private::Length;
 use bevy::time::{Timer, TimerMode};
 use bevy::ui::{PositionType, Style};
 use bevy::utils::default;
-use bevy_ascii_terminal::{Border, Terminal, TiledCameraBundle};
+use bevy::DefaultPlugins;
 use bevy_ascii_terminal::prelude::*;
+use bevy_ascii_terminal::{Border, Terminal, TiledCameraBundle};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-
 use systems::input::input;
-use systems::maps::{Map, new_map_rooms_coors};
+use systems::maps::{new_map_rooms_coors, Map};
 use systems::movement::movement::input_movement;
 
 use crate::components::bundles::PlayerBundle;
 use crate::components::Position;
-use crate::engine::{CLEAR_TILE, DEVMAP_SIZE, VIEWPORT_SIZE};
 use crate::engine::terminal::render_all;
-use crate::systems::maps::LEAF_DEV;
+use crate::engine::{CLEAR_TILE, DEVMAP_SIZE, VIEWPORT_SIZE};
 use crate::systems::maps::map_builder::{EventGrowBSPTree, Leaf};
+use crate::systems::maps::LEAF_DEV;
 use crate::systems::movement::movement::left_walk_system;
 
 mod components;
@@ -75,7 +74,7 @@ fn setup_bsp(mut commands: Commands, mut t_event: EventWriter<EventGrowBSPTree>)
             transform: Transform::from_translation(vec3(0., 0., 0.0)),
             ..default()
         },
-        MainCamera, 
+        MainCamera,
     ));
 
     spawn_dev_text(&mut commands);
@@ -104,11 +103,7 @@ fn spawn_dev_text(commands: &mut Commands) {
     ));
 }
 
-fn print_bsp_dev(
-    mut commands: Commands,
-    leafs: Query<&Leaf>,
-    mut dev_text: Query<(&mut Text, &mut DevText)>,
-) {
+fn print_bsp_dev(mut commands: Commands, leafs: Query<&Leaf>, mut dev_text: Query<(&mut Text, &mut DevText)>) {
     let text = &mut dev_text.single_mut().0.sections[0].value;
     let l = leafs.iter().len();
     *text = "DevText\n".to_string();
@@ -121,8 +116,7 @@ pub struct GameTerminal;
 
 fn setup_dev(mut commands: Commands) {
     // Terminal
-    let mut terminal =
-        Terminal::new([DEVMAP_SIZE[0], DEVMAP_SIZE[1]]).with_border(Border::single_line());
+    let mut terminal = Terminal::new([DEVMAP_SIZE[0], DEVMAP_SIZE[1]]).with_border(Border::single_line());
     terminal.clear_tile = CLEAR_TILE;
     terminal.put_string([1, 1], "Hello world!".fg(Color::BLUE));
 
@@ -130,21 +124,17 @@ fn setup_dev(mut commands: Commands) {
     commands.spawn((term_bundle, GameTerminal));
 
     // Camera
-    commands.spawn(
-        TiledCameraBundle::pixel_cam(VIEWPORT_SIZE)
-            .with_pixels_per_tile([1, 1])
-            .with_clear_color(Color::rgb(0.1, 0.1, 0.1)),
-    );
+    commands.spawn(TiledCameraBundle::pixel_cam(VIEWPORT_SIZE).with_pixels_per_tile([1, 1]).with_clear_color(Color::rgb(0.1, 0.1, 0.1)));
 
     // Map
-    let map = new_map_rooms_coors();
-    commands.spawn((Map(map)));
-
-    let s = 0;
-
+    let (map, rooms) = new_map_rooms_coors();
+    let (player_x, player_y) = rooms[0].center();
+    commands.spawn((Map(map, rooms)));
+    let s = 011asdas;
+    printf(n);
     // Player
     commands.spawn(PlayerBundle {
-        position: Position(ivec2(40, 25)),
+        position: Position(ivec2(player_x, player_y)),
         ..default()
     });
 }

@@ -117,11 +117,7 @@ pub fn generate_room(container: &Leaf, rng: [u8; 32], commands: &mut Commands, c
 
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_translation(vec3(
-                container.x as f32,
-                container.y as f32,
-                3.,
-            )),
+            transform: Transform::from_translation(vec3(container.x as f32, container.y as f32, 3.)),
             visibility: Visibility::Visible,
             sprite: Sprite {
                 color,
@@ -201,9 +197,7 @@ impl Leaf {
         ));
     }
 
-    pub fn area(&self) -> i32 {
-        self.w * self.h
-    }
+    pub fn area(&self) -> i32 { self.w * self.h }
 }
 
 pub fn generate_bsp(commands: &mut Commands, seed: &Leaf, depth: i16, min: (i32, i32)) {
@@ -215,8 +209,7 @@ pub fn generate_bsp(commands: &mut Commands, seed: &Leaf, depth: i16, min: (i32,
         return generate_bsp(commands, seed, depth, min);
     }
 
-    tree.leaf
-        .paint_box(commands, Color::rgb(0.5, 0.5, 0.5), -1.0, 0.0);
+    tree.leaf.paint_box(commands, Color::rgb(0.5, 0.5, 0.5), -1.0, 0.0);
     for leaf in &leafs {
         leaf.paint_box(commands, Color::rgb(0.15, 0.15, 0.15), 0.0, 10.0);
         generate_room(leaf, rng, commands, Color::rgb(0.25, 0.25, 0.25));

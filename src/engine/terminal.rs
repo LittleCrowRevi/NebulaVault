@@ -1,7 +1,3 @@
-use crate::DEVMAP_SIZE;
-use crate::components::{Position, Renderable};
-use crate::systems::maps::Map;
-use crate::GameTerminal;
 use bevy::{
     math::IVec2,
     prelude::{Color, Component, Query, With},
@@ -9,12 +5,12 @@ use bevy::{
 use bevy_ascii_terminal::{GridPoint, Terminal, Tile, TileFormatter};
 
 use super::{TileType, CLEAR_TILE};
+use crate::components::{Position, Renderable};
+use crate::systems::maps::Map;
+use crate::GameTerminal;
+use crate::DEVMAP_SIZE;
 
-pub fn render_all(
-    mut query_r: Query<(&Renderable, &Position)>,
-    mut query_term: Query<&mut Terminal, With<GameTerminal>>,
-    query_map: Query<&Map>,
-) {
+pub fn render_all(mut query_r: Query<(&Renderable, &Position)>, mut query_term: Query<&mut Terminal, With<GameTerminal>>, query_map: Query<&Map>) {
     let mut term = query_term.single_mut();
     term.clear();
 
@@ -33,15 +29,14 @@ pub fn render_map(map: &Vec<TileType>, mut term: &mut Terminal) {
 
     for tile in map {
         match tile {
-            TileType::Wall => {
-               term.put_tile(
+            TileType::Wall => term.put_tile(
                 IVec2::new(x, y),
                 Tile {
                     glyph: '#',
                     fg_color: Color::GREEN,
                     ..Default::default()
-                }) 
-            },
+                },
+            ),
             TileType::Floor => term.put_tile(IVec2::new(x, y), CLEAR_TILE),
             _ => {}
         }

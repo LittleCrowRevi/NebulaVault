@@ -6,14 +6,14 @@ use crate::components::{CoreStats, VitalStats};
 #[derive(Bundle)]
 pub struct BaseRace {
     pub vital: VitalStats,
-    pub core: CoreStats
+    pub core: CoreStats,
 }
 
 #[derive(Component)]
 pub struct RaceName(pub String);
 
 #[derive(Component)]
-pub struct Human; 
+pub struct Human;
 
 #[derive(Bundle)]
 pub struct HumanBundle {
@@ -22,26 +22,26 @@ pub struct HumanBundle {
     pub tag: Human,
 }
 
-impl Default for HumanBundle { 
+impl Default for HumanBundle {
     fn default() -> Self {
-        Self { 
+        Self {
             name: RaceName(String::from("Human")),
             base_stats: BaseRace {
                 core: CoreStats {
-                    strength: 10, 
-                    agility: 10, 
-                    constitution: 10, 
+                    strength: 10,
+                    agility: 10,
+                    constitution: 10,
                     fortune: 10,
                     wisdom: 10,
-                    intelligence: 10
+                    intelligence: 10,
                 },
                 vital: VitalStats {
                     health: 100,
                     energy: 100,
-                    mana: 100
-                }
+                    mana: 100,
+                },
             },
-            tag: Human
+            tag: Human,
         }
     }
 }
@@ -50,7 +50,7 @@ impl Default for HumanBundle {
 pub struct HalfAngelBundle {
     pub base_stats: BaseRace,
     pub name: RaceName,
-    pub tag: HalfAngel
+    pub tag: HalfAngel,
 }
 
 #[derive(Component)]
@@ -67,15 +67,15 @@ impl Default for HalfAngelBundle {
                     constitution: 8,
                     fortune: 12,
                     wisdom: 14,
-                    intelligence: 10
+                    intelligence: 10,
                 },
                 vital: VitalStats {
                     health: 10,
                     energy: 10,
-                    mana: 15
-                }
+                    mana: 15,
+                },
             },
-            tag: HalfAngel
+            tag: HalfAngel,
         }
     }
 }
@@ -84,7 +84,7 @@ impl Default for HalfAngelBundle {
 pub struct FaerieBundle {
     pub base_stats: BaseRace,
     pub name: RaceName,
-    pub tag: Faerie
+    pub tag: Faerie,
 }
 
 #[derive(Component)]
@@ -101,16 +101,15 @@ impl Default for FaerieBundle {
                     constitution: 6,
                     fortune: 12,
                     wisdom: 10,
-                    intelligence: 12
+                    intelligence: 12,
                 },
                 vital: VitalStats {
                     health: 10,
                     energy: 5,
-                    mana: 20
-                }
+                    mana: 20,
+                },
             },
-            tag: Faerie
+            tag: Faerie,
         }
     }
 }
-

@@ -2,8 +2,8 @@ use bevy::app::AppExit;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
-use crate::MainCamera;
 use crate::systems::maps::map_builder::EventGrowBSPTree;
+use crate::MainCamera;
 
 pub fn input(
     mut exit: EventWriter<AppExit>,
@@ -27,4 +27,3 @@ pub fn input(
         });
     });*/
 }
-

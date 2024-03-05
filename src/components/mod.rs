@@ -1,8 +1,8 @@
 use bevy::math::ivec2;
 use bevy::prelude::*;
 use bevy_ascii_terminal::Tile;
-use bevy_inspector_egui::InspectorOptions;
 use bevy_inspector_egui::prelude::*;
+use bevy_inspector_egui::InspectorOptions;
 
 use crate::components::Renderable as OtherRenderable;
 
