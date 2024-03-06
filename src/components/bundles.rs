@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bevy::prelude::{Bundle, Color};
 
 use crate::components::Renderable;
-use crate::components::{PlayerMarker, Position};
+use crate::components::{PlayerMarker, Position, Viewshed};
 
 #[derive(Bundle)]
 pub struct PlayerBundle {
@@ -12,19 +12,17 @@ pub struct PlayerBundle {
     pub position: Position,
     pub renderable: Renderable,
     pub name: Name,
+    pub viewshed: Viewshed,
 }
 
 impl Default for PlayerBundle {
     fn default() -> Self {
         PlayerBundle {
-            renderable: Renderable {
-                glyph: '@',
-                bg_color: Color::BLACK,
-                fg_color: Color::WHITE,
-            },
+            renderable: Renderable { glyph: '@', bg_color: Color::BLACK, fg_color: Color::WHITE },
             position: Position(ivec2(0, 0)),
             marker: PlayerMarker,
             name: Name::new("Player"),
+            viewshed: Viewshed { visible_tiles: Vec::new(), range: 8 },
         }
     }
 }

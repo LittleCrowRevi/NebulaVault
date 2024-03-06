@@ -3,6 +3,8 @@ use bevy_ascii_terminal::Tile;
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
 
+use crate::engine::rect::Point;
+
 pub mod bundles;
 pub mod races;
 
@@ -19,16 +21,18 @@ pub struct Renderable {
 
 impl From<&Renderable> for Tile {
     fn from(value: &Renderable) -> Self {
-        Tile {
-            glyph: value.glyph,
-            bg_color: value.bg_color,
-            fg_color: value.fg_color,
-        }
+        Tile { glyph: value.glyph, bg_color: value.bg_color, fg_color: value.fg_color }
     }
 }
 
 #[derive(Component)]
 pub struct PlayerMarker;
+
+#[derive(Component)]
+pub struct Viewshed {
+    pub visible_tiles: Vec<Point>,
+    pub range: i32,
+}
 
 // stats
 #[allow(dead_code)]
@@ -41,11 +45,7 @@ pub struct VitalStats {
 
 impl Default for VitalStats {
     fn default() -> Self {
-        Self {
-            health: 100,
-            energy: 100,
-            mana: 100,
-        }
+        Self { health: 100, energy: 100, mana: 100 }
     }
 }
 
@@ -72,4 +72,3 @@ impl Default for CoreStats {
         }
     }
 }
-

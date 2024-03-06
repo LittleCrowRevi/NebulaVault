@@ -1,13 +1,6 @@
-use std::cmp::{max, min};
-
-use bevy::prelude::Component;
-use bevy::reflect::Reflect;
 use bevy_ascii_terminal::GridPoint;
-use bevy_inspector_egui::prelude::*;
-use bevy_inspector_egui::InspectorOptions;
 use rand::{thread_rng, Rng};
 
-use crate::engine::rect::Rect;
 use crate::engine::{TileType, DEVMAP_SIZE};
 
 pub mod map;

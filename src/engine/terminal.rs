@@ -5,13 +5,13 @@ use bevy::{
 use bevy_ascii_terminal::{GridPoint, Terminal, Tile, TileFormatter};
 
 use super::{TileType, CLEAR_TILE};
-use crate::components::{Position, Renderable};
+use crate::components::{Position, Renderable, Viewshed};
 use crate::systems::map_gen::map::Map;
 use crate::GameTerminal;
-use crate::DEVMAP_SIZE;
 
 pub fn render_all(
     mut query_r: Query<(&Renderable, &Position)>,
+    query_view: Query<&Viewshed>,
     mut query_term: Query<&mut Terminal, With<GameTerminal>>,
     query_map: Query<&Map>,
 ) {
@@ -19,7 +19,7 @@ pub fn render_all(
     term.clear();
 
     for map in &query_map {
-        render_map(&map.tiles, &mut term);
+        render_map(map, &mut term);
     }
 
     for (r, pos) in query_r.iter() {
@@ -27,25 +27,27 @@ pub fn render_all(
     }
 }
 
-pub fn render_map(map: &Vec<TileType>, mut term: &mut Terminal) {
-    let mut x = 0;
+pub fn render_map(map: &Map, term: &mut Terminal) {
+    let mut x = -1;
     let mut y = 0;
 
-    for tile in map {
-        match tile {
-            TileType::Wall => term.put_tile(
-                IVec2::new(x, y),
-                Tile { glyph: '#', fg_color: Color::GREEN, ..Default::default() },
-            ),
-            TileType::Floor => term.put_tile(IVec2::new(x, y), CLEAR_TILE),
-            _ => {}
-        }
-
+    for (idx, tile) in map.tiles.iter().enumerate() {
         // Move the coordinates
         x += 1;
-        if x > DEVMAP_SIZE.x() - 1 {
+        if x > map.width - 1 {
             x = 0;
             y += 1;
         }
+        if !map.revealed_tiles[idx] {
+            continue;
+        }
+        let mut t: Tile = match tile {
+            TileType::Floor => CLEAR_TILE,
+            _ => Tile { glyph: '#', fg_color: Color::GREEN, ..Default::default() },
+        };
+        if !map.visible_tiles[idx] {
+            t.fg_color = Color::GRAY;
+        }
+        term.put_tile(IVec2::new(x, y), t);
     }
 }

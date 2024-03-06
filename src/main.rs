@@ -11,6 +11,7 @@ use bevy_ascii_terminal::prelude::*;
 use bevy_ascii_terminal::{Border, Terminal, TiledCameraBundle};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use systems::input::{input, respawn_map};
+use systems::visibility::system_visibility;
 use systems::{map_gen::map::Map, movement::input_movement};
 
 use crate::components::bundles::PlayerBundle;
@@ -88,9 +89,9 @@ impl Plugin for NebulaVault {
         app.add_plugins((WorldInspectorPlugin::new(), TerminalPlugin))
             .insert_resource(NebulaTime(Timer::from_seconds(1.0, TimerMode::Repeating)))
             .add_systems(Startup, setup_dev)
-            .add_systems(Update, (respawn_map, render_all, input_movement, input))
-            //.add_systems(Update, (print_bsp_dev, input, redraw_map))
-            //.add_systems(Startup, setup_bsp)
-            .register_type::<Map>();
+            .add_systems(Update, (respawn_map, render_all, input_movement, input, system_visibility))
+        //.add_systems(Update, (print_bsp_dev, input, redraw_map))
+        //.add_systems(Startup, setup_bsp)
+        ;
     }
 }
