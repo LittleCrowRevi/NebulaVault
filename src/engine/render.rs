@@ -4,10 +4,10 @@ use bevy::{
 };
 use bevy_ascii_terminal::{GridPoint, Terminal, Tile, TileFormatter};
 
-use super::{TileType, CLEAR_TILE};
-use crate::components::{Position, Renderable, Viewshed};
-use crate::systems::map_gen::map::Map;
-use crate::GameTerminal;
+use crate::prelude::*;
+
+#[derive(Component)]
+pub struct GameTerminal;
 
 pub fn render_all(
     mut query_r: Query<(&Renderable, &Position)>,

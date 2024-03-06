@@ -2,10 +2,13 @@ use bevy::app::AppExit;
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 
-use super::map_gen::map::Map;
-use crate::components::{PlayerMarker, Position};
+use crate::prelude::*;
 
-pub fn input(mut exit: EventWriter<AppExit>, keys: Res<ButtonInput<KeyCode>>, mut mouse: EventReader<MouseWheel>) {
+pub fn input(
+    mut exit: EventWriter<AppExit>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut mouse: EventReader<MouseWheel>,
+) {
     if keys.just_pressed(KeyCode::Escape) {
         exit.send(AppExit);
     }
@@ -16,6 +19,58 @@ pub fn input(mut exit: EventWriter<AppExit>, keys: Res<ButtonInput<KeyCode>>, mu
             c.scale = log_scale.exp();
         });
     }); */
+}
+
+pub fn input_movement(
+    mut query_p: Query<(&mut Position), With<PlayerMarker>>,
+    query_map: Query<&Map>,
+    input: Res<ButtonInput<KeyCode>>,
+) {
+    let map = query_map.single();
+    let mut p = IVec2::ZERO;
+    if input.just_pressed(KeyCode::Numpad1) || input.just_pressed(KeyCode::KeyZ) {
+        p.x = -1;
+        p.y = -1;
+    }
+    if input.just_pressed(KeyCode::Numpad2)
+        || input.just_pressed(KeyCode::KeyX)
+        || input.just_pressed(KeyCode::ArrowDown)
+    {
+        p.y = -1;
+    }
+    if input.just_pressed(KeyCode::Numpad3) || input.just_pressed(KeyCode::KeyC) {
+        p.x = 1;
+        p.y = -1;
+    }
+    if input.just_pressed(KeyCode::Numpad4)
+        || input.just_pressed(KeyCode::KeyA)
+        || input.just_pressed(KeyCode::ArrowLeft)
+    {
+        p.x = -1;
+    }
+    if input.just_pressed(KeyCode::Numpad6)
+        || input.just_pressed(KeyCode::KeyD)
+        || input.just_pressed(KeyCode::ArrowRight)
+    {
+        p.x = 1;
+    }
+    if input.just_pressed(KeyCode::Numpad7) || input.just_pressed(KeyCode::KeyQ) {
+        p.x = -1;
+        p.y = 1;
+    }
+    if input.just_pressed(KeyCode::Numpad8)
+        || input.just_pressed(KeyCode::KeyW)
+        || input.just_pressed(KeyCode::ArrowUp)
+    {
+        p.y = 1;
+    }
+    if input.just_pressed(KeyCode::Numpad9) || input.just_pressed(KeyCode::KeyE) {
+        p.x = 1;
+        p.y = 1;
+    }
+    for (mut player_pos) in &mut query_p {
+        try_move_player(p.x, p.y, &mut player_pos, map);
+    }
 }
 
 pub fn respawn_map(

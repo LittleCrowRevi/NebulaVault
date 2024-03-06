@@ -1,10 +1,10 @@
-use bevy::prelude::Component;
 use bevy::reflect::Reflect;
-use bevy_ascii_terminal::GridPoint;
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
 
-#[derive(Debug, Component, Clone, Copy)]
+use crate::prelude::*;
+
+#[derive(Debug, Component, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Point {
     pub x: i32,
     pub y: i32,

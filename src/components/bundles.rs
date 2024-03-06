@@ -1,10 +1,7 @@
 use bevy::core::Name;
 use bevy::math::ivec2;
-use bevy::prelude::*;
-use bevy::prelude::{Bundle, Color};
 
-use crate::components::Renderable;
-use crate::components::{PlayerMarker, Position, Viewshed};
+use crate::prelude::*;
 
 #[derive(Bundle)]
 pub struct PlayerBundle {

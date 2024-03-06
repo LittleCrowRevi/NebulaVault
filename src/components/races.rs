@@ -1,7 +1,4 @@
-use bevy::prelude::*;
-
-use crate::components::*;
-use crate::components::{CoreStats, VitalStats};
+use crate::prelude::*;
 
 #[derive(Bundle)]
 pub struct BaseRace {
@@ -35,11 +32,7 @@ impl Default for HumanBundle {
                     wisdom: 10,
                     intelligence: 10,
                 },
-                vital: VitalStats {
-                    health: 100,
-                    energy: 100,
-                    mana: 100,
-                },
+                vital: VitalStats { health: 100, energy: 100, mana: 100 },
             },
             tag: Human,
         }
@@ -69,11 +62,7 @@ impl Default for HalfAngelBundle {
                     wisdom: 14,
                     intelligence: 10,
                 },
-                vital: VitalStats {
-                    health: 10,
-                    energy: 10,
-                    mana: 15,
-                },
+                vital: VitalStats { health: 10, energy: 10, mana: 15 },
             },
             tag: HalfAngel,
         }
@@ -103,11 +92,7 @@ impl Default for FaerieBundle {
                     wisdom: 10,
                     intelligence: 12,
                 },
-                vital: VitalStats {
-                    health: 10,
-                    energy: 5,
-                    mana: 20,
-                },
+                vital: VitalStats { health: 10, energy: 5, mana: 20 },
             },
             tag: Faerie,
         }

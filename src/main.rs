@@ -1,28 +1,33 @@
 #![warn(clippy::pedantic)]
 
 use bevy::app::{App, Plugin, Startup};
-use bevy::math::{ivec2, vec3};
-use bevy::prelude::*;
+use bevy::math::ivec2;
 use bevy::time::{Timer, TimerMode};
-use bevy::ui::{PositionType, Style};
 use bevy::utils::default;
 use bevy::DefaultPlugins;
-use bevy_ascii_terminal::prelude::*;
 use bevy_ascii_terminal::{Border, Terminal, TiledCameraBundle};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-use systems::input::{input, respawn_map};
-use systems::visibility::system_visibility;
-use systems::{map_gen::map::Map, movement::input_movement};
-
-use crate::components::bundles::PlayerBundle;
-use crate::components::Position;
-use crate::engine::terminal::render_all;
-use crate::engine::{CLEAR_TILE, DEVMAP_SIZE, VIEWPORT_SIZE};
+use engine::debug::{setup_debug, update_debug_text};
 
 mod components;
 mod engine;
 mod systems;
 mod tests;
+
+mod prelude {
+    pub use std::cmp::{max, min};
+
+    pub use bevy::prelude::*;
+    pub use bevy_ascii_terminal::prelude::*;
+    pub use rand::{thread_rng, Rng};
+
+    pub use crate::components::*;
+    pub use crate::engine::rect::{Point, Rect};
+    pub use crate::engine::*;
+    pub use crate::systems::*;
+}
+
+use prelude::*;
 
 fn main() {
     App::new()
@@ -48,12 +53,6 @@ enum GameState {
     Loading,
     Exploration,
 }
-
-#[derive(Resource)]
-struct NebulaTime(Timer);
-
-#[derive(Component)]
-pub struct GameTerminal;
 
 fn setup_dev(mut commands: Commands) {
     // Terminal
@@ -88,8 +87,8 @@ impl Plugin for NebulaVault {
     fn build(&self, app: &mut App) {
         app.add_plugins((WorldInspectorPlugin::new(), TerminalPlugin))
             .insert_resource(NebulaTime(Timer::from_seconds(1.0, TimerMode::Repeating)))
-            .add_systems(Startup, setup_dev)
-            .add_systems(Update, (respawn_map, render_all, input_movement, input, system_visibility))
+            .add_systems(Startup, (setup_dev, setup_debug))
+            .add_systems(Update, (respawn_map, render_all, input_movement, input, system_visibility, update_debug_text))
         //.add_systems(Update, (print_bsp_dev, input, redraw_map))
         //.add_systems(Startup, setup_bsp)
         ;

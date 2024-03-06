@@ -3,10 +3,13 @@ use bevy_ascii_terminal::Tile;
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
 
-use crate::engine::rect::Point;
+use crate::prelude::*;
 
 pub mod bundles;
 pub mod races;
+
+pub use bundles::*;
+pub use races::*;
 
 #[derive(Component, Reflect, InspectorOptions)]
 #[reflect(InspectorOptions)]

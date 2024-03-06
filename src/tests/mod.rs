@@ -1,9 +1,7 @@
 use std::cmp::{max, min};
 
-use super::*;
 use crate::{
-    engine::{rect::Rect, TileType},
-    systems::map_gen::map::Map,
+    prelude::*,
 };
 
 #[test]
