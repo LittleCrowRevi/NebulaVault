@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::utils::HashSet;
 use bevy_ascii_terminal::Tile;
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
@@ -11,9 +12,10 @@ pub mod races;
 pub use bundles::*;
 pub use races::*;
 
-#[derive(Component, Reflect, InspectorOptions)]
-#[reflect(InspectorOptions)]
-pub struct Position(pub IVec2);
+// Engine Components
+
+#[derive(Component)]
+pub struct Position(pub Point);
 
 #[derive(Component, Debug)]
 pub struct Renderable {
@@ -29,15 +31,25 @@ impl From<&Renderable> for Tile {
 }
 
 #[derive(Component)]
+pub struct Viewshed {
+    pub visible_tiles: HashSet<usize>,
+    pub range: i32,
+    pub dirty: bool,
+}
+
+// Markers
+
+#[derive(Component)]
 pub struct PlayerMarker;
 
 #[derive(Component)]
-pub struct Viewshed {
-    pub visible_tiles: Vec<Point>,
-    pub range: i32,
-}
+pub struct Enemy;
+
+#[derive(Component)]
+pub struct Monster;
 
 // stats
+
 #[allow(dead_code)]
 #[derive(Component)]
 pub struct VitalStats {
@@ -65,13 +77,6 @@ pub struct CoreStats {
 
 impl Default for CoreStats {
     fn default() -> Self {
-        Self {
-            constitution: 10,
-            fortune: 10,
-            agility: 10,
-            strength: 10,
-            wisdom: 10,
-            intelligence: 10,
-        }
+        Self { constitution: 10, fortune: 10, agility: 10, strength: 10, wisdom: 10, intelligence: 10 }
     }
 }

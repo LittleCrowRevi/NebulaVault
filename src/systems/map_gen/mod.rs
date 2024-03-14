@@ -1,5 +1,8 @@
+
+use bevy::utils::HashSet;
 use bevy_ascii_terminal::GridPoint;
 
+use crate::engine::rect::{Point, Rect};
 use crate::prelude::*;
 
 #[derive(Component, Debug)]
@@ -8,13 +11,13 @@ pub struct Map {
     pub tiles: Vec<TileType>,
     pub width: i32,
     pub height: i32,
-    pub revealed_tiles: Vec<bool>,
-    pub visible_tiles: Vec<bool>,
+    pub revealed_tiles: HashSet<usize>,
+    pub visible_tiles: HashSet<usize>,
 }
 
 impl Map {
-    pub fn xy_idx(&self, x: i32, y: i32) -> usize {
-        ((y * self.width) + x) as usize
+    pub fn xy_idx(&self, point: Point) -> usize {
+        ((point.y * self.width) + point.x) as usize
     }
 
     pub fn idx_xy(&self, idx: usize) -> Point {
@@ -22,6 +25,10 @@ impl Map {
         let y = idx / self.width as usize;
 
         Point::new(x as i32, y as i32)
+    }
+
+    pub fn out_of_bounds(&self, point: Point) -> bool {
+        point.x < 0 || point.x > self.width || point.y < 0 || point.y > self.height
     }
 
     pub fn size(&self) -> usize {
@@ -32,10 +39,35 @@ impl Map {
         self.tiles[idx] == TileType::Wall
     }
 
+    pub fn is_tile_traversable(&self, pos: &Point) -> bool {
+        if pos.x < 1 || pos.x > self.width - 1 || pos.y < 1 || pos.y > self.height - 1 { return false; }
+        let idx = self.xy_idx(*pos);
+        self.tiles[idx] != TileType::Wall
+    }
+
+    pub fn get_traversable_tiles(&self, pos: Point) {
+        let mut tiles = HashSet::new();
+        let x = pos.x;
+        let y = pos.y;
+
+        for n in &pos.neighbors() {
+            if self.is_tile_traversable(n) {
+                let idx = self.xy_idx(*n);
+                tiles.insert(idx);
+            }
+        }
+
+    }
+
     pub fn paint_room_floor(&mut self, room: &Rect) {
         for p in room.points() {
-            let idx = self.xy_idx(p.x, p.y);
+            let idx = self.xy_idx(p);
             self.tiles[idx] = TileType::Floor;
+        }
+
+        for o in room.outer_rim() {
+            let idx = self.xy_idx(o);
+            self.tiles[idx] = TileType::Wall;
         }
     }
 
@@ -43,7 +75,7 @@ impl Map {
         let (start_x, end_x) = (min(point1.x, point2.x), max(point1.x, point2.x));
         for x in start_x..=end_x {
             for i in 0..width {
-                let idx = self.xy_idx(x, y + i);
+                let idx = self.xy_idx(Point::new(x, y + i));
                 if idx > 0 && idx < self.size() {
                     self.tiles[idx] = TileType::Floor;
                 }
@@ -55,7 +87,7 @@ impl Map {
         let (start_y, end_y) = (min(point1.y, point2.y), max(point1.y, point2.y));
         for y in start_y..=end_y {
             for i in 0..width {
-                let idx = self.xy_idx(x + i, y);
+                let idx = self.xy_idx(Point::new(x + i, y));
                 if idx > 0 && idx < self.size() {
                     self.tiles[idx] = TileType::Floor;
                 }
@@ -65,17 +97,18 @@ impl Map {
 
     pub fn generate_room(&self, min_size: i32, max_size: i32) -> Rect {
         let mut rng = thread_rng();
-        let w = rng.gen_range(min_size..max_size);
-        let h = rng.gen_range(min_size..max_size);
+        // TODO: REMEMBER THIS SHOULDNT BE INCLUSIVE =max_size, NOR -1 ON RECT
+        let w = rng.gen_range(min_size..=max_size);
+        let h = rng.gen_range(min_size..=max_size);
         let x = rng.gen_range(1..self.width - w - 1);
         let y = rng.gen_range(1..self.height - h - 1);
-        Rect::new(x, y, w, h)
+        Rect::new(x - 1, y - 1, w, h)
     }
 
-    pub fn new_map_rooms_coors(size: (i32, i32)) -> Map {
+    pub fn new_map_rooms_coors(commands: &mut Commands, size: (i32, i32)) -> Map {
         const MAX_ROOMS: i32 = 30;
         const MIN_SIZE: i32 = 6;
-        const MAX_SIZE: i32 = 10;
+        const MAX_SIZE: i32 = 20;
         let s = (size.0 * size.1) as usize;
 
         let mut map = Map {
@@ -83,33 +116,43 @@ impl Map {
             rooms: Vec::new(),
             width: size.0,
             height: size.1,
-            revealed_tiles: vec![false; s],
-            visible_tiles: vec![false; s],
+            revealed_tiles: HashSet::new(),
+            visible_tiles: HashSet::new(),
         };
 
         let mut rng = thread_rng();
 
-        for _ in 0..MAX_ROOMS {
-            let n_room = map.generate_room(MIN_SIZE, MAX_SIZE);
+        'outer: for _ in 0..MAX_ROOMS {
+            let n_room: Rect = map.generate_room(MIN_SIZE, MAX_SIZE);
 
-            if map.rooms.iter().any(|r| n_room.intersect(r)) {
-                continue;
+            if map.rooms.iter().any(|r: &Rect| r.intersect(&n_room, 1)) {
+                continue 'outer;
             }
 
             map.paint_room_floor(&n_room);
-
-            if !map.rooms.is_empty() {
-                let n_center = n_room.center();
-                let p_center = map.rooms[map.rooms.len() - 1].center();
-                if rng.gen_bool(0.5) {
-                    map.paint_htunnel(p_center, n_center, p_center.y, 1);
-                    map.paint_vtunnel(p_center, n_center, n_center.x, 1);
-                } else {
-                    map.paint_vtunnel(p_center, n_center, p_center.x, 1);
-                    map.paint_htunnel(p_center, n_center, n_center.y, 1);
-                }
-            }
             map.rooms.push(n_room);
+        }
+
+        let rooms = map.rooms.clone();
+
+        for room in rooms {
+            let n_center = room.center();
+            let p_center = map.rooms[map.rooms.len() - 1].center();
+            if rng.gen_bool(0.5) {
+                map.paint_htunnel(p_center, n_center, p_center.y, 1);
+                map.paint_vtunnel(p_center, n_center, n_center.x, 1);
+            } else {
+                map.paint_vtunnel(p_center, n_center, p_center.x, 1);
+                map.paint_htunnel(p_center, n_center, n_center.y, 1);
+            }
+        }
+
+        for room in map.rooms.iter().skip(1) {
+            let center = room.center();
+            let mut goblin = GoblinBundle::default();
+            goblin.position.0 = center;
+
+            commands.spawn(goblin);
         }
 
         map
