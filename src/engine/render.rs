@@ -11,7 +11,7 @@ use crate::prelude::*;
 pub struct GameTerminal;
 
 pub fn render_all(
-    mut query_r: Query<(&Renderable, &Position, Option<&PlayerMarker>)>,
+    query_r: Query<(&Renderable, &Position, Option<&PlayerMarker>)>,
     query_view: Query<&Viewshed>,
     mut query_term: Query<&mut Terminal, With<GameTerminal>>,
     query_map: Query<&Map>,
@@ -20,14 +20,11 @@ pub fn render_all(
     term.clear();
 
     for map in &query_map {
-        
         render_map(map, &mut term);
 
         for (r, pos, player) in &query_r {
-            let idx = map.xy_idx(Point::new(pos.0.x, pos.0.y));
-
-            if map.visible_tiles.contains(&idx) || player.is_some() {
-                term.put_tile(ivec2(pos.0.x, pos.0.y), Tile::from(r));
+            if map.visible_tiles.contains(&pos.idx) || player.is_some() {
+                term.put_tile(ivec2(pos.xy.x, pos.xy.y), Tile::from(r));
             }
         }
     }

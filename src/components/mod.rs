@@ -15,7 +15,10 @@ pub use races::*;
 // Engine Components
 
 #[derive(Component)]
-pub struct Position(pub Point);
+pub struct Position {
+    pub xy: Point,
+    pub idx: usize,
+}
 
 #[derive(Component, Debug)]
 pub struct Renderable {
@@ -34,7 +37,9 @@ impl From<&Renderable> for Tile {
 pub struct Viewshed {
     pub visible_tiles: HashSet<usize>,
     pub range: i32,
+    /// False if shall recalculate, True if not
     pub dirty: bool,
+    pub previous_tiles: HashSet<usize>,
 }
 
 // Markers
@@ -47,6 +52,18 @@ pub struct Enemy;
 
 #[derive(Component)]
 pub struct Monster;
+
+#[derive(Component)]
+pub struct BlocksTile;
+
+#[derive(PartialEq, Debug, Copy, Clone, Component)]
+pub enum EntityType {
+    Air,
+    Player,
+    NPC,
+    Enemy,
+    Item,
+}
 
 // stats
 

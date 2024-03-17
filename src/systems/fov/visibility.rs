@@ -3,6 +3,7 @@
 use std::thread::current;
 
 use bevy::{a11y::Focus, utils::HashSet};
+use bracket_pathfinding::prelude::BaseMap;
 
 use crate::prelude::*;
 
@@ -49,18 +50,20 @@ pub fn fov_system(
             continue;
         }
 
-        map.visible_tiles.clear();
+        viewshed.previous_tiles = viewshed.visible_tiles.clone();
         viewshed.visible_tiles.clear();
 
-        viewshed.visible_tiles = recursive_shadowrevi(&map, viewshed.range, Point::new(pos.0.x, pos.0.y));
+        viewshed.visible_tiles = recursive_shadowrevi(&map, viewshed.range, Point::new(pos.xy.x, pos.xy.y));
         //viewshed.visible_tiles = recursive_shadowcast_ba(pos.0, viewshed.range, &map);
 
         viewshed.visible_tiles.retain(|i| {
             let p = map.idx_xy(*i);
             p.x >= 0 && p.x < map.width && p.y >= 0 && p.y < map.height
         });
+        
 
         if player.is_some() {
+            map.visible_tiles.clear();
             for tile in &viewshed.visible_tiles {
                 map.visible_tiles.insert(*tile);
                 map.revealed_tiles.insert(*tile);
@@ -69,18 +72,6 @@ pub fn fov_system(
 
         viewshed.dirty = true;
     }
-}
-
-pub fn recursive_shadowcast(map: &Map, range: i32, pos: Point) -> HashSet<usize> {
-    let mut visible_tiles = HashSet::new();
-
-    for (idx, c) in CARDINALS.iter().enumerate() {
-        let next = if idx >= CARDINALS.len() - 1 { 0 } else { idx + 1 };
-        let octant = Octant::new(Point::from(c.0), CARDINALS[next].0, Point::from(c.1));
-        cast_light(map, &mut visible_tiles, range, 1, pos, octant);
-    }
-
-    visible_tiles
 }
 
 pub fn recursive_shadowrevi(map: &Map, range: i32, pos: Point) -> HashSet<usize> {
@@ -137,14 +128,16 @@ pub fn cast_light(
             }
 
             let is_opaque = map.is_opaque(cell_idx);
-
+            
+            // to skip walls
             let can_see = if is_opaque { true } else { cell.can_see(start_pos, map) };
-
+            
             let distance_squared = depth * depth + scan * scan;
-
+            
             if distance_squared <= range * range && can_see {
                 visible_tiles.insert(cell_idx);
             }
+            
 
             if encountered_blocking {
                 if is_opaque {
@@ -175,27 +168,6 @@ pub fn cast_light(
 
 fn is_symmetric(left_slope: f32, right_slope: f32, depth: f32, column: f32) -> bool {
     column >= depth * left_slope && column <= depth * right_slope
-}
-
-fn recursive_shadowcast_ba(observer: Point, range: i32, map: &Map) -> HashSet<usize> {
-    let mut visible_tiles = HashSet::new();
-    let mut to_visit = Vec::new();
-    to_visit.push((observer, 0));
-
-    while let Some((pos, depth)) = to_visit.pop() {
-        if depth <= range {
-            let idx = map.xy_idx(pos);
-            visible_tiles.insert(idx);
-
-            for neighbor in pos.neighbors() {
-                if neighbor.can_see(observer, map) {
-                    to_visit.push((neighbor, depth + 1));
-                }
-            }
-        }
-    }
-
-    visible_tiles
 }
 
 pub fn recursive_shadowcast_revi(map: &Map, range: i32, pos: Point) -> HashSet<usize> {
@@ -241,21 +213,23 @@ pub fn calc_cast_light(
                 continue;
             }
 
-            if stop_cell.is_some() && current_cell == stop_cell.unwrap() {
-                if !encountered_blocking && saved_transparent.is_some() {
-                    let start_cell = saved_transparent.unwrap();
-                    calc_cast_light(
-                        map,
-                        visible_tiles,
-                        r - 1,
-                        start_cell,
-                        Some(previous_cell + octant.depth_direction),
-                        depth + 1,
-                        octant,
-                    );
-                    continue_loop = false;
-                    break;
-                }
+            if stop_cell.is_some()
+                && current_cell == stop_cell.unwrap()
+                && !encountered_blocking
+                && saved_transparent.is_some()
+            {
+                let start_cell = saved_transparent.unwrap();
+                calc_cast_light(
+                    map,
+                    visible_tiles,
+                    r - 1,
+                    start_cell,
+                    Some(previous_cell + octant.depth_direction),
+                    depth + 1,
+                    octant,
+                );
+                continue_loop = false;
+                break;
             }
 
             let is_opaque = map.is_opaque(current_cell_idx);

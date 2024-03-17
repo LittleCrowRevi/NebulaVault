@@ -1,3 +1,5 @@
+#![allow(clippy::comparison_chain)]
+
 use std::ops::Add;
 use std::ops::AddAssign;
 use std::ops::Mul;
@@ -7,6 +9,7 @@ use bevy::reflect::Reflect;
 use bevy::utils::HashSet;
 use bevy_inspector_egui::prelude::*;
 use bevy_inspector_egui::InspectorOptions;
+use bracket_pathfinding::prelude::BaseMap;
 
 use crate::prelude::*;
 
@@ -24,17 +27,21 @@ impl Point {
         Self { x: x + vec.0, y: y + vec.1 }
     }
 
-    pub fn neighbors(self) -> Vec<Point> {
+    pub fn distance_to(self, target: Point) -> f64 {
+        f64::from((target.x - self.x).pow(2) + (target.y - self.y).pow(2)).sqrt()
+    }
+
+    pub fn neighbors(self) -> Vec<(Point, f32)> {
         vec![
-            Point::new(self.x - 1, self.y),
-            Point::new(self.x + 1, self.y),
-            Point::new(self.x, self.y - 1),
-            Point::new(self.x, self.y + 1),
-            // Add diagonal neighbors if needed
-            Point::new(self.x - 1, self.y - 1),
-            Point::new(self.x - 1, self.y + 1),
-            Point::new(self.x + 1, self.y - 1),
-            Point::new(self.x + 1, self.y + 1),
+            (Point::new(self.x - 1, self.y), 1.0),
+            (Point::new(self.x + 1, self.y), 1.0),
+            (Point::new(self.x, self.y - 1), 1.0),
+            (Point::new(self.x, self.y + 1), 1.0),
+            // diagonal neighbors
+            (Point::new(self.x - 1, self.y - 1), 1.5),
+            (Point::new(self.x - 1, self.y + 1), 1.5),
+            (Point::new(self.x + 1, self.y - 1), 1.5),
+            (Point::new(self.x + 1, self.y + 1), 1.5),
         ]
     }
 
@@ -51,6 +58,7 @@ impl Point {
         let mut iy = 0;
         while ix < nx || iy < ny {
             let decision = (1 + 2 * ix) * ny - (1 + 2 * iy) * nx;
+
             if decision == 0 {
                 // next step is diagonal
                 p.x += sx;
@@ -131,6 +139,12 @@ impl From<Point> for IVec2 {
 impl From<(i32, i32)> for Point {
     fn from(value: (i32, i32)) -> Self {
         Self { x: value.0, y: value.1 }
+    }
+}
+
+impl From<Point> for bracket_pathfinding::prelude::Point {
+    fn from(value: Point) -> Self {
+        bracket_pathfinding::prelude::Point { x: value.x, y: value.y }
     }
 }
 

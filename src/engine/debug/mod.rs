@@ -22,7 +22,7 @@ pub fn setup_debug(mut commands: Commands) {
     ));
 }
 
-pub fn update_debug_text(
+pub fn update_debug_text_system(
     mut debug_text: Query<&mut Text, With<DevText>>,
     query_map: Query<&Map>,
     diagnostics: Res<DiagnosticsStore>,

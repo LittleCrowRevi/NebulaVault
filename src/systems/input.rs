@@ -4,7 +4,11 @@ use bevy::prelude::*;
 
 use crate::{prelude::*, GameState, PlayerPosition};
 
-pub fn input(mut exit: EventWriter<AppExit>, keys: Res<ButtonInput<KeyCode>>, mut mouse: EventReader<MouseWheel>) {
+pub fn input_game_system(
+    mut exit: EventWriter<AppExit>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut mouse: EventReader<MouseWheel>,
+) {
     if keys.just_pressed(KeyCode::Escape) {
         exit.send(AppExit);
     }
@@ -17,15 +21,15 @@ pub fn input(mut exit: EventWriter<AppExit>, keys: Res<ButtonInput<KeyCode>>, mu
     }); */
 }
 
-pub fn input_movement(
-    mut query_p: Query<(&mut Position, &mut Viewshed), With<PlayerMarker>>,
+pub fn input_movement_system(
+    query_p: Query<(&Position, &Viewshed, Entity), With<PlayerMarker>>,
     query_map: Query<&Map>,
     input: Res<ButtonInput<KeyCode>>,
     mut state: ResMut<NextState<GameState>>,
-    mut player_resource: ResMut<PlayerPosition>,
+    mut ev_move: EventWriter<MovementRequestEvent>,
 ) {
     let map = query_map.single();
-    let mut p = IVec2::ZERO;
+    let mut p = Point::new(0, 0);
     if input.just_pressed(KeyCode::Numpad1) || input.just_pressed(KeyCode::KeyZ) {
         p.x = -1;
         p.y = -1;
@@ -55,17 +59,16 @@ pub fn input_movement(
         p.y = 1;
     }
 
-    for (mut player_pos, mut viewshed) in &mut query_p {
+    for (player_pos, viewshed, entity) in &query_p {
         if p.x != 0 || p.y != 0 {
-            try_move_player(p.x, p.y, &mut player_pos, &mut viewshed, map, &mut player_resource);
+            let target = player_pos.xy + p;
+            ev_move.send(MovementRequestEvent::new(player_pos.xy, target, entity));
+            state.set(GameState::Ticking);
         }
-    }
-    if p.x != 0 || p.y != 0 {
-        state.set(GameState::Ticking);
     }
 }
 
-pub fn respawn_map(
+pub fn dev_input_respawn_map(
     mut commands: Commands,
     input: Res<ButtonInput<KeyCode>>,
     mut query_q: Query<(&mut Position, Option<&PlayerMarker>, &Renderable, Entity)>,
@@ -79,8 +82,8 @@ pub fn respawn_map(
 
         for (mut pos, player, _, entity) in &mut query_q {
             if player.is_some() {
-                pos.0.x = player_spawn.x;
-                pos.0.y = player_spawn.y;
+                pos.xy.x = player_spawn.x;
+                pos.xy.y = player_spawn.y;
             } else {
                 commands.entity(entity).despawn_recursive();
             }
