@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using ObjectExtensions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -15,6 +16,8 @@ public class ExplorationState : IState
         Game.player.transform.position = CachedPlayerPosition ??= Game.player.transform.position;
 
         Game.m_OnInitiateBattle.OnRaiseEvent += OnInitiateBattle;
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     public void Update()
@@ -25,6 +28,8 @@ public class ExplorationState : IState
     public void Exit()
     {
         Game.m_OnInitiateBattle.OnRaiseEvent -= OnInitiateBattle;
+
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
     private void OnInitiateBattle( GameObject[] friendlyActors, GameObject[] hostileActors )
@@ -36,6 +41,17 @@ public class ExplorationState : IState
             Friendly = friendlyActors.ToList()
         };
 
+        if ( StateController.GameData )
+        {
+            StateController.GameData.PlayerPosition           = CachedPlayerPosition ??= Game.player.transform.position;
+            StateController.GameData.LastActiveOverworldScene = SceneManager.GetActiveScene().name;
+        }
+
         Game.m_StateChange.RaiseEvent( battleState, TransitionType.Add );
+    }
+
+    private void OnSceneLoaded( Scene scene, LoadSceneMode mode )
+    {
+        StateController.m_LoadUi.RaiseEvent();
     }
 }

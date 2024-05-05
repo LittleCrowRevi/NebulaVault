@@ -57,13 +57,14 @@ public class BattleState : IState
         StateController.m_LoadBattleUi.RaiseEvent();
 
         StateController.m_StartingBattle.RaiseEvent();
-        
+
         state = BattlingState.PlayerTurn;
     }
 
     public void Exit()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        SceneManager.LoadSceneAsync( StateController.GameData.LastActiveOverworldScene );
         StateController.m_ExitingBattle.RaiseEvent();
         StateController.m_ChangeCameraTarget.RaiseEvent( Game.player );
     }

@@ -30,11 +30,15 @@ public class StateController : MonoBehaviour
     private readonly Stack< IState >    _stateStack  = new();
     private readonly List< Transition > _transitions = new();
 
+    [Header( "Data" )]
+    [SerializeField] public GameDataSO GameData;
+    
     [Header( "Broadcast Events" )]
     [SerializeField] public GameObjectEventChannelSO m_ChangeCameraTarget;
 
     [SerializeField] public VoidEventChannelSO m_StartingBattle;
     [SerializeField] public VoidEventChannelSO m_ExitingBattle;
+    [SerializeField] public VoidEventChannelSO m_LoadUi;
 
     [Header( "Listen to Events" )]
     [SerializeField] public ChangeStateEventChannelSO m_StateChange;

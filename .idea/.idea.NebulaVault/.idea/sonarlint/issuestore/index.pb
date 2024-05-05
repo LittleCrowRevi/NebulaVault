@@ -187,3 +187,7 @@ b
 2Assets/Scripts/Events/ChangeStateEventChannelSO.cs,6\5\65685f5baab596cee99e48b07b6728c15b64c169
 V
 &ProjectSettings/TimelineSettings.asset,8\6\86106abc57d2b2487fce02712275d196eaec34ed
+^
+.Assets/Scripts/ScriptableObjects/GameDataSO.cs,e\a\eac267131d5f11db1fb0cc3c528ba81f3095b689
+]
+-Assets/Scripts/Events/StringEventChannelSO.cs,f\1\f113b03b8288a20c00844e0c61f111f07e9dedd2

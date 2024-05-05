@@ -21,8 +21,6 @@ public class Game : MonoBehaviour
     [SerializeField] public ChangeStateEventChannelSO    m_StateChange;
     [SerializeField] public InitiateBattleEventChannelSO m_InitiateBattle;
 
-    [SerializeField] public VoidEventChannelSO m_LoadUi;
-
     [Header( "Listen to Event" )]
     [SerializeField] public InitiateBattleEventChannelSO m_OnInitiateBattle;
 
@@ -40,9 +38,7 @@ public class Game : MonoBehaviour
         m_ChangeCameraTarget.IsValid()?.RaiseEvent( player );
 
         SceneManager.LoadScene( "Dungeon", LoadSceneMode.Single );
-        activeScene = SceneManager.GetSceneByBuildIndex( 1 );
 
-        m_LoadUi.IsValid()?.RaiseEvent();
     }
 }
 

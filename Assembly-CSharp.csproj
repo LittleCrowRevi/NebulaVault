@@ -56,12 +56,13 @@
     <Compile Include="Assets\Scripts\Events\InitiateBattleEventChannelSO.cs" />
     <Compile Include="Assets\Scripts\Battle\Battleground.cs" />
     <Compile Include="Assets\Scripts\UI\StatScreen.cs" />
-    <Compile Include="Assets\Scripts\ScriptableObjects\BattleDataSO.cs" />
+    <Compile Include="Assets\Scripts\ScriptableObjects\GameDataSO.cs" />
     <Compile Include="Assets\Scripts\States\IState.cs" />
     <Compile Include="Assets\Scripts\CameraComponent.cs" />
     <Compile Include="Assets\Scripts\UI\FlexibleUiBar.cs" />
     <Compile Include="Assets\Scripts\States\StateController.cs" />
     <Compile Include="Assets\Scripts\UI\FlexibleUiButton.cs" />
+    <Compile Include="Assets\Scripts\Events\StringEventChannelSO.cs" />
     <Compile Include="Assets\Scripts\ScriptableObjects\EntityData.cs" />
     <Compile Include="Assets\Scripts\Game.cs" />
     <Compile Include="Assets\Scripts\EventSystem.cs" />
