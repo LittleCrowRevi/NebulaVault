@@ -4,25 +4,45 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 using ObjectExtensions;
+using UnityEditor;
+using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour
 {
     [Header( "Data" )]
+    [SerializeField] public Scene activeScene;
+
+    [SerializeField] public GameObject stateController;
     [SerializeField] public GameObject player;
 
     [Header( "Broadcast Events" )]
     [SerializeField] public GameObjectEventChannelSO m_ChangeCameraTarget;
 
-    [SerializeField] public StateChangeEventChannelSO m_StateChange;
+    [SerializeField] public ChangeStateEventChannelSO    m_StateChange;
+    [SerializeField] public InitiateBattleEventChannelSO m_InitiateBattle;
+
+    [SerializeField] public VoidEventChannelSO m_LoadUi;
+
+    [Header( "Listen to Event" )]
+    [SerializeField] public InitiateBattleEventChannelSO m_OnInitiateBattle;
 
     // Start is called before the first frame update
     private void Start()
     {
-        player = GameObject.Find( "Player" );
+        DontDestroyOnLoad( gameObject );
+
+        stateController.GetComponent< StateController >().Game = this;
+
+        player = GameObject.FindWithTag( "Player" );
+        DontDestroyOnLoad( player.gameObject );
 
         m_StateChange.IsValid()?.RaiseEvent( new ExplorationState(), TransitionType.Add );
-
         m_ChangeCameraTarget.IsValid()?.RaiseEvent( player );
+
+        SceneManager.LoadScene( "Dungeon", LoadSceneMode.Single );
+        activeScene = SceneManager.GetSceneByBuildIndex( 1 );
+
+        m_LoadUi.IsValid()?.RaiseEvent();
     }
 }
 
@@ -34,5 +54,23 @@ namespace ObjectExtensions
         {
             return !unityObject ? null : unityObject;
         }
+    }
+}
+
+
+public class ConditionalPropertyAttribute : PropertyAttribute
+{
+    public string   condition;
+    public object[] compareValues;
+
+    public ConditionalPropertyAttribute( string condition )
+    {
+        this.condition = condition;
+    }
+
+    public ConditionalPropertyAttribute( string fieldToCheck, params object[] values )
+    {
+        this.condition     = fieldToCheck;
+        this.compareValues = values;
     }
 }

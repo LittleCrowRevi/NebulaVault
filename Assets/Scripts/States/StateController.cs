@@ -24,25 +24,31 @@ public enum TransitionType
 // implement transition methods? from to?
 public class StateController : MonoBehaviour
 {
-    /// Events
-    public delegate void StateChangeEvent( int transitionType, IState nextState );
-
-    /// Data Fields
     public IState CurrentState => PeekState();
+    public Game   Game;
 
     private readonly Stack< IState >    _stateStack  = new();
     private readonly List< Transition > _transitions = new();
 
+    [Header( "Broadcast Events" )]
+    [SerializeField] public GameObjectEventChannelSO m_ChangeCameraTarget;
+
+    [SerializeField] public VoidEventChannelSO m_StartingBattle;
+    [SerializeField] public VoidEventChannelSO m_ExitingBattle;
+
     [Header( "Listen to Events" )]
-    [SerializeField] public StateChangeEventChannelSO m_StateChange;
-    
-    /// methods
+    [SerializeField] public ChangeStateEventChannelSO m_StateChange;
+
+    [SerializeField] public VoidEventChannelSO m_LoadBattleUi;
+
     private void OnEnable()
     {
         if ( m_StateChange is not null )
         {
             m_StateChange.OnEventRaised += OnTransition;
         }
+
+        DontDestroyOnLoad( gameObject );
     }
 
     private void Update()
@@ -66,11 +72,15 @@ public class StateController : MonoBehaviour
             switch ( transition.TransitionType )
             {
                 case TransitionType.Replace:
+                    transition.Next.Game            = Game;
+                    transition.Next.StateController = this;
                     ReplaceState( transition.Next );
                     _transitions.Remove( transition );
                     break;
 
                 case TransitionType.Add:
+                    transition.Next.Game            = Game;
+                    transition.Next.StateController = this;
                     AddState( transition.Next );
                     _transitions.Remove( transition );
                     break;
@@ -83,7 +93,8 @@ public class StateController : MonoBehaviour
                 default:
                     throw new ArgumentOutOfRangeException( nameof( transitions ), "TransitionType missing" );
             }
-            Debug.Log( "Transitioned to State: " + transition.Next.Name);
+
+            Debug.Log( "Transitioned to State: " + transition.Next.Name );
         }
     }
 

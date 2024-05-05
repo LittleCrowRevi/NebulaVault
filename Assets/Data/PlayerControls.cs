@@ -44,6 +44,15 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""DebugStartBattle"",
+                    ""type"": ""Button"",
+                    ""id"": ""6f75ce36-4672-48c9-af69-9ef3ac36db5d"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -123,6 +132,45 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""action"": ""OpenStatScreen"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""368c4c94-5817-4729-97f9-e22a61ab049f"",
+                    ""path"": ""<Keyboard>/k"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""K&M"",
+                    ""action"": ""DebugStartBattle"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
+        },
+        {
+            ""name"": ""Battle"",
+            ""id"": ""9a325348-7956-4514-956e-f9c701938abb"",
+            ""actions"": [
+                {
+                    ""name"": ""DebugExit"",
+                    ""type"": ""Button"",
+                    ""id"": ""ae39666d-5eb6-4fff-bca4-3aa46cb1dac6"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""52560c0a-dc0d-43a6-8965-778dacea28a4"",
+                    ""path"": ""<Keyboard>/k"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""DebugExit"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -155,6 +203,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_InGame = asset.FindActionMap("InGame", throwIfNotFound: true);
         m_InGame_Move = m_InGame.FindAction("Move", throwIfNotFound: true);
         m_InGame_OpenStatScreen = m_InGame.FindAction("OpenStatScreen", throwIfNotFound: true);
+        m_InGame_DebugStartBattle = m_InGame.FindAction("DebugStartBattle", throwIfNotFound: true);
+        // Battle
+        m_Battle = asset.FindActionMap("Battle", throwIfNotFound: true);
+        m_Battle_DebugExit = m_Battle.FindAction("DebugExit", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -218,12 +270,14 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private List<IInGameActions> m_InGameActionsCallbackInterfaces = new List<IInGameActions>();
     private readonly InputAction m_InGame_Move;
     private readonly InputAction m_InGame_OpenStatScreen;
+    private readonly InputAction m_InGame_DebugStartBattle;
     public struct InGameActions
     {
         private @PlayerControls m_Wrapper;
         public InGameActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
         public InputAction @Move => m_Wrapper.m_InGame_Move;
         public InputAction @OpenStatScreen => m_Wrapper.m_InGame_OpenStatScreen;
+        public InputAction @DebugStartBattle => m_Wrapper.m_InGame_DebugStartBattle;
         public InputActionMap Get() { return m_Wrapper.m_InGame; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -239,6 +293,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @OpenStatScreen.started += instance.OnOpenStatScreen;
             @OpenStatScreen.performed += instance.OnOpenStatScreen;
             @OpenStatScreen.canceled += instance.OnOpenStatScreen;
+            @DebugStartBattle.started += instance.OnDebugStartBattle;
+            @DebugStartBattle.performed += instance.OnDebugStartBattle;
+            @DebugStartBattle.canceled += instance.OnDebugStartBattle;
         }
 
         private void UnregisterCallbacks(IInGameActions instance)
@@ -249,6 +306,9 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @OpenStatScreen.started -= instance.OnOpenStatScreen;
             @OpenStatScreen.performed -= instance.OnOpenStatScreen;
             @OpenStatScreen.canceled -= instance.OnOpenStatScreen;
+            @DebugStartBattle.started -= instance.OnDebugStartBattle;
+            @DebugStartBattle.performed -= instance.OnDebugStartBattle;
+            @DebugStartBattle.canceled -= instance.OnDebugStartBattle;
         }
 
         public void RemoveCallbacks(IInGameActions instance)
@@ -266,6 +326,52 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         }
     }
     public InGameActions @InGame => new InGameActions(this);
+
+    // Battle
+    private readonly InputActionMap m_Battle;
+    private List<IBattleActions> m_BattleActionsCallbackInterfaces = new List<IBattleActions>();
+    private readonly InputAction m_Battle_DebugExit;
+    public struct BattleActions
+    {
+        private @PlayerControls m_Wrapper;
+        public BattleActions(@PlayerControls wrapper) { m_Wrapper = wrapper; }
+        public InputAction @DebugExit => m_Wrapper.m_Battle_DebugExit;
+        public InputActionMap Get() { return m_Wrapper.m_Battle; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(BattleActions set) { return set.Get(); }
+        public void AddCallbacks(IBattleActions instance)
+        {
+            if (instance == null || m_Wrapper.m_BattleActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_BattleActionsCallbackInterfaces.Add(instance);
+            @DebugExit.started += instance.OnDebugExit;
+            @DebugExit.performed += instance.OnDebugExit;
+            @DebugExit.canceled += instance.OnDebugExit;
+        }
+
+        private void UnregisterCallbacks(IBattleActions instance)
+        {
+            @DebugExit.started -= instance.OnDebugExit;
+            @DebugExit.performed -= instance.OnDebugExit;
+            @DebugExit.canceled -= instance.OnDebugExit;
+        }
+
+        public void RemoveCallbacks(IBattleActions instance)
+        {
+            if (m_Wrapper.m_BattleActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        public void SetCallbacks(IBattleActions instance)
+        {
+            foreach (var item in m_Wrapper.m_BattleActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_BattleActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    public BattleActions @Battle => new BattleActions(this);
     private int m_StandardSchemeIndex = -1;
     public InputControlScheme StandardScheme
     {
@@ -288,5 +394,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     {
         void OnMove(InputAction.CallbackContext context);
         void OnOpenStatScreen(InputAction.CallbackContext context);
+        void OnDebugStartBattle(InputAction.CallbackContext context);
+    }
+    public interface IBattleActions
+    {
+        void OnDebugExit(InputAction.CallbackContext context);
     }
 }

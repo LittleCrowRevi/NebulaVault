@@ -24,16 +24,17 @@ public class Movement : MonoBehaviour
         get => _isMoving;
     }
 
-    [Header("States")]
-    [SerializeField] private bool  canMove       = false;
-    
-    [Header("Movement Values")]
-    [SerializeField] private float stopDrag      = 50f;
+    [Header( "States" )]
+    [SerializeField] private bool canMove = false;
+
+    [Header( "Movement Values" )]
+    [SerializeField] private float stopDrag = 50f;
+
     [SerializeField] private float movingDrag    = 10f;
     [SerializeField] public  float movementSpeed = 5000.0F;
 
+    private Vector2     direction = Vector2.zero;
     private Rigidbody2D body;
-    private Vector2      direction = Vector2.zero;
 
     private void Awake()
     {

@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public enum BattlingState
 {
@@ -15,11 +18,8 @@ public class BattleState : IState
 {
     /// signals
     /// methods
-    public BattleState( StateController stateController, Game gameManager, Battleground battleground )
+    public BattleState()
     {
-        Game            = gameManager;
-        Battleground    = battleground;
-        StateController = stateController;
     }
 
     public BattlingState state;
@@ -28,47 +28,47 @@ public class BattleState : IState
     public List< GameObject >  Hostile   { get; set; } = new List< GameObject >();
     public Stack< GameObject > TurnOrder { get; set; } = new Stack< GameObject >();
 
-    //public Battle Battleground { get; set; }
-
     public Game            Game            { get; set; }
+    public string          Name            { get; set; } = "Battle State";
     public StateController StateController { get; set; }
-    public Battleground    Battleground    { get; set; }
-
-    public string Name { get; set; } = "Battle State";
 
     public void Enter()
     {
+        SceneManager.LoadSceneAsync( "Battleground_Dungeon" );
+        SceneManager.sceneLoaded += OnSceneLoaded;
+
+        state = BattlingState.Start;
+    }
+
+    private void OnSceneLoaded( Scene scene, LoadSceneMode mode )
+    {
+        var battleground = scene.GetRootGameObjects().Single( o => o.CompareTag( "Battleground" ) ).GetComponent< Battleground >();
         for ( int i = 0; i < Friendly.Count; i++ )
         {
-            Friendly[ i ].transform.position = Battleground.FriendlyAnchors[ i ].transform.position;
+            Friendly[ i ].transform.position = battleground.FriendlyAnchors[ i ].transform.position;
         }
 
         for ( int i = 0; i < Hostile.Count; i++ )
         {
-            Hostile[ i ].transform.position = Battleground.HostileAnchors[ i ].transform.position;
+            Hostile[ i ].transform.position = battleground.HostileAnchors[ i ].transform.position;
         }
 
-        Game.m_ChangeCameraTarget.RaiseEvent( Battleground.gameObject );
+        StateController.m_ChangeCameraTarget.RaiseEvent( battleground.gameObject );
+        StateController.m_LoadBattleUi.RaiseEvent();
 
+        StateController.m_StartingBattle.RaiseEvent();
+        
         state = BattlingState.PlayerTurn;
-    }
-
-    public void Update()
-    {
-        /*if ( Input.IsActionJustPressed( "dev_battle" ) )
-        {
-            // Make into ExitBattle Event/Signal
-            Game.Camera.EmitSignal( GlobalCamera.SignalName.TargetChange, Game.Player );
-            Game.GetNode< Node2D >( "BattleScene" ).GetChild( 0 ).Free();
-
-            Game.StateController.EmitSignal( StateController.SignalName.StateChange, ( int )TransitionType.Remove, new ToolbarMenu.Variant() );
-            Game.GetNode< Node2D >( "WorldScene" ).Visible = true;
-        }*/
     }
 
     public void Exit()
     {
-        
-        Game.m_ChangeCameraTarget.RaiseEvent( Game.player );
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+        StateController.m_ExitingBattle.RaiseEvent();
+        StateController.m_ChangeCameraTarget.RaiseEvent( Game.player );
+    }
+
+    public void Update()
+    {
     }
 }

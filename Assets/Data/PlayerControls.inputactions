@@ -22,6 +22,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "DebugStartBattle",
+                    "type": "Button",
+                    "id": "6f75ce36-4672-48c9-af69-9ef3ac36db5d",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -99,6 +108,45 @@
                     "processors": "",
                     "groups": "",
                     "action": "OpenStatScreen",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "368c4c94-5817-4729-97f9-e22a61ab049f",
+                    "path": "<Keyboard>/k",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "K&M",
+                    "action": "DebugStartBattle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Battle",
+            "id": "9a325348-7956-4514-956e-f9c701938abb",
+            "actions": [
+                {
+                    "name": "DebugExit",
+                    "type": "Button",
+                    "id": "ae39666d-5eb6-4fff-bca4-3aa46cb1dac6",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "52560c0a-dc0d-43a6-8965-778dacea28a4",
+                    "path": "<Keyboard>/k",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "DebugExit",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

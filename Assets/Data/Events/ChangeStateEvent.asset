@@ -9,8 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aac2896f2bab4ea1b644c8e87b03829c, type: 3}
-  m_Name: PlayerStatBody
+  m_Script: {fileID: 11500000, guid: 9024af962f9f4044b19c71fca952af5e, type: 3}
+  m_Name: ChangeStateEvent
   m_EditorClassIdentifier: 
-  value: 10
-  type: 2

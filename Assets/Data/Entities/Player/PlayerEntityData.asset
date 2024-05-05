@@ -9,6 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9024af962f9f4044b19c71fca952af5e, type: 3}
-  m_Name: StateChangeEvent
+  m_Script: {fileID: 11500000, guid: 9fde3cfb9b8f45509d7b45c6f80089f1, type: 3}
+  m_Name: PlayerEntityData
   m_EditorClassIdentifier: 
+  position: {x: 0, y: 0}
+  focus: 23
+  mind: 26
+  body: 22

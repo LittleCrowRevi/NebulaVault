@@ -5,8 +5,11 @@ using UnityEngine.Events;
 public interface IState
 {
     public string Name { get; set; }
-    
-    public void   Enter();
+
+    public Game            Game            { get; set; }
+    public StateController StateController { get; set; }
+
+    public void Enter();
 
     public void Exit();
 

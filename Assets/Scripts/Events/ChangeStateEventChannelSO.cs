@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 
 [CreateAssetMenu( menuName = "Events/State Event Channel" )]
-public class StateChangeEventChannelSO : ScriptableObject
+public class ChangeStateEventChannelSO : ScriptableObject
 {
     public UnityAction< IState, TransitionType > OnEventRaised;
 

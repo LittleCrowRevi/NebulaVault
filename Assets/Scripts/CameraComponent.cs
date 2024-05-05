@@ -20,6 +20,8 @@ public class CameraComponent : MonoBehaviour
 
     private void Start()
     {
+        DontDestroyOnLoad( gameObject );
+        
         if ( m_ChangeCameraTarget ) m_ChangeCameraTarget.OnRaiseEvent += OnChangeCameraTarget;
     }
 
@@ -33,8 +35,12 @@ public class CameraComponent : MonoBehaviour
 
     private void OnChangeCameraTarget( GameObject newTarget )
     {
-        trackedEntity   = newTarget;
-        _velocity       = trackedEntity.GetComponent< Rigidbody2D >().velocity;
+        trackedEntity = newTarget;
+        if ( trackedEntity.TryGetComponent( out Rigidbody2D trackedRigid ) )
+        {
+            _velocity = trackedRigid.velocity;
+        }
+
         trackedOffset.z = transform.position.z - trackedEntity.transform.position.z;
     }
 }
