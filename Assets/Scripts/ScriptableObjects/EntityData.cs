@@ -6,7 +6,9 @@ public class EntityData : ScriptableObject
 {
     public Vector2 position;
 
-    public int focus;
-    public int mind;
-    public int body;
+    public string id;
+    public int    baseHealth;
+    public int    focus;
+    public int    mind;
+    public int    body;
 }

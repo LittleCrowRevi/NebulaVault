@@ -12,7 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fde3cfb9b8f45509d7b45c6f80089f1, type: 3}
   m_Name: SlimeEntityData
   m_EditorClassIdentifier: 
-  position: {x: 0, y: 0}
+  position: {x: 2.65, y: -2.02}
+  id: Slime
+  baseHealth: 25
   focus: 2
   mind: 2
   body: 8

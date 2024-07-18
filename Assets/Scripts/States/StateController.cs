@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 public enum TransitionType
 {
@@ -25,25 +26,29 @@ public enum TransitionType
 public class StateController : MonoBehaviour
 {
     public IState CurrentState => PeekState();
-    public Game   Game;
 
     private readonly Stack< IState >    _stateStack  = new();
     private readonly List< Transition > _transitions = new();
 
     [Header( "Data" )]
-    [SerializeField] public GameDataSO GameData;
-    
+    public Game game;
+
+    public GameDataSO     gameData;
+    public ResourceLoader resourceLoader;
+
+
     [Header( "Broadcast Events" )]
     [SerializeField] public GameObjectEventChannelSO m_ChangeCameraTarget;
 
     [SerializeField] public VoidEventChannelSO m_StartingBattle;
     [SerializeField] public VoidEventChannelSO m_ExitingBattle;
-    [SerializeField] public VoidEventChannelSO m_LoadUi;
+    [SerializeField] public VoidEventChannelSO m_LoadOverworldUi;
 
     [Header( "Listen to Events" )]
     [SerializeField] public ChangeStateEventChannelSO m_StateChange;
 
     [SerializeField] public VoidEventChannelSO m_LoadBattleUi;
+    [SerializeField] public VoidEventChannelSO m_AttackCommand;
 
     private void OnEnable()
     {
@@ -76,14 +81,14 @@ public class StateController : MonoBehaviour
             switch ( transition.TransitionType )
             {
                 case TransitionType.Replace:
-                    transition.Next.Game            = Game;
+                    transition.Next.Game            = game;
                     transition.Next.StateController = this;
                     ReplaceState( transition.Next );
                     _transitions.Remove( transition );
                     break;
 
                 case TransitionType.Add:
-                    transition.Next.Game            = Game;
+                    transition.Next.Game            = game;
                     transition.Next.StateController = this;
                     AddState( transition.Next );
                     _transitions.Remove( transition );
@@ -98,7 +103,7 @@ public class StateController : MonoBehaviour
                     throw new ArgumentOutOfRangeException( nameof( transitions ), "TransitionType missing" );
             }
 
-            Debug.Log( "Transitioned to State: " + transition.Next.Name );
+            Debug.Log( "Transitioned to State: " + CurrentState.Name );
         }
     }
 

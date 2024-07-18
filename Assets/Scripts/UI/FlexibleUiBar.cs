@@ -12,7 +12,7 @@ public class FlexibleUiBar : FlexibleUi
 
     public bool backgroundEnabled = true;
 
-    [Tooltip( "Pool Asset to observe." )] public PoolSO observedPool;
+    [Tooltip( "Pool Asset to observe." )] public Entity observedEntity;
 
     protected override void ModifySkinUi()
     {
@@ -38,9 +38,9 @@ public class FlexibleUiBar : FlexibleUi
         base.Update();
         var slider = GetComponent< Slider >();
 
-        if ( observedPool )
+        if ( observedEntity )
         {
-            slider.value = ( float )observedPool.currentValue / observedPool.baseValue;
+            slider.value = ( float )observedEntity.CurrentHealth / observedEntity.Health;
         }
     }
 }

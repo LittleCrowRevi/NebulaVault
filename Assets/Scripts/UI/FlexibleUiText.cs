@@ -4,18 +4,19 @@ using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [RequireComponent( typeof( RectTransform ) )]
 [RequireComponent( typeof( CanvasRenderer ) )]
-[RequireComponent( typeof( TMP_Text ) )]
+[RequireComponent( typeof( TextMeshProUGUI ) )]
 public class FlexibleUiText : FlexibleUi
 {
     [Header( "Type Data" )]
-    public ScriptableObject observedData;
+    public UnityEngine.Object observedEntity;
 
-    [ConditionalProperty( "observedData", typeof( EntityData ) )]
+    [ConditionalProperty( "observedEntity", typeof( EntityData ) )]
     [Tooltip( "Stat Type to observe." )]
-    public StatType statType;
+    public StatType observedStat;
 
     public override void Update()
     {
@@ -26,27 +27,27 @@ public class FlexibleUiText : FlexibleUi
 
         if ( skinData && skinData.font ) text.font = skinData.font;
 
-        if ( !observedData ) return;
-        switch ( observedData )
+        if ( !observedEntity ) return;
+        switch ( observedEntity )
         {
-            case PoolSO data:
-                text.text = $"HP {data.currentValue}/{data.baseValue}";
-                break;
-
-            case EntityData data:
+            case Entity data:
                 var dataString = new StringBuilder();
-                switch ( statType )
+                switch ( observedStat )
                 {
                     case StatType.Focus:
-                        dataString.Append( data.focus );
+                        dataString.Append( data.Focus );
                         break;
 
                     case StatType.Mind:
-                        dataString.Append( data.mind );
+                        dataString.Append( data.Mind );
                         break;
 
                     case StatType.Body:
-                        dataString.Append( data.body );
+                        dataString.Append( data.Body );
+                        break;
+                    
+                    case StatType.Health:
+                        dataString.Append( $"{data.CurrentHealth}/{data.Health}" );
                         break;
                 }
 

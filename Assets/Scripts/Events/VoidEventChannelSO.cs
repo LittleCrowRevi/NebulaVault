@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-[CreateAssetMenu(menuName = "Events/Void Event Channel")]
+[CreateAssetMenu( menuName = "Events/Void Event Channel" )]
 public class VoidEventChannelSO : ScriptableObject
 {
-    public UnityAction OnEventRaised;
+    public delegate void Event();
+
+    public Event OnEventRaised;
 
     public void RaiseEvent()
     {

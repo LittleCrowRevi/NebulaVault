@@ -3,7 +3,7 @@ using ObjectExtensions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class ExplorationState : IState
+public class ExplorationState : MonoBehaviour, IState
 {
     public Vector3? CachedPlayerPosition { get; set; }
 
@@ -35,16 +35,15 @@ public class ExplorationState : IState
     private void OnInitiateBattle( GameObject[] friendlyActors, GameObject[] hostileActors )
     {
         Debug.Log( "Starting battle transition." );
-        var battleState = new BattleState
-        {
-            Hostile  = hostileActors.ToList(),
-            Friendly = friendlyActors.ToList()
-        };
 
-        if ( StateController.GameData )
+        var battleState = new GameObject( "BattleState" ).AddComponent< BattleState >();
+        battleState.Hostile  = hostileActors.ToList();
+        battleState.Friendly = friendlyActors.ToList();
+
+        if ( StateController.gameData )
         {
-            StateController.GameData.PlayerPosition           = CachedPlayerPosition ??= Game.player.transform.position;
-            StateController.GameData.LastActiveOverworldScene = SceneManager.GetActiveScene().name;
+            StateController.gameData.PlayerPosition           = CachedPlayerPosition ??= Game.player.transform.position;
+            StateController.gameData.LastActiveOverworldScene = SceneManager.GetActiveScene().name;
         }
 
         Game.m_StateChange.RaiseEvent( battleState, TransitionType.Add );
@@ -52,6 +51,6 @@ public class ExplorationState : IState
 
     private void OnSceneLoaded( Scene scene, LoadSceneMode mode )
     {
-        StateController.m_LoadUi.RaiseEvent();
+        StateController.m_LoadOverworldUi.RaiseEvent();
     }
 }

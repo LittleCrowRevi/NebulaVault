@@ -13,7 +13,7 @@ public class CameraComponent : MonoBehaviour
 
     private float   UpdateSpeed => updateSpeed;
     private Vector3 _velocity     = Vector3.zero;
-    private Vector3 trackedOffset = Vector3.zero;
+    private Vector3 _trackedOffset = Vector3.zero;
 
     [Header( "Listen to Events" )]
     [SerializeField] private GameObjectEventChannelSO m_ChangeCameraTarget;
@@ -29,7 +29,7 @@ public class CameraComponent : MonoBehaviour
     {
         if ( trackedEntity )
         {
-            transform.position = Vector3.SmoothDamp( transform.position, trackedEntity.transform.position + trackedOffset, ref _velocity, UpdateSpeed );
+            transform.position = Vector3.SmoothDamp( transform.position, trackedEntity.transform.position + _trackedOffset, ref _velocity, UpdateSpeed );
         }
     }
 
@@ -41,6 +41,6 @@ public class CameraComponent : MonoBehaviour
             _velocity = trackedRigid.velocity;
         }
 
-        trackedOffset.z = transform.position.z - trackedEntity.transform.position.z;
+        _trackedOffset.z = transform.position.z - trackedEntity.transform.position.z;
     }
 }

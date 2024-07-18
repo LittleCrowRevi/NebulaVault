@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class ResourceLoader : MonoBehaviour
 {
@@ -10,19 +11,24 @@ public class ResourceLoader : MonoBehaviour
 
     public GameObject StatScreenPrefab;
 
+    public IntEventChannelSO IntEventChannelSO;
+
+    [Header( "Data" )]
+    public Game Game;
+    
     [Header( "Listen to Event" )]
     [SerializeField] public VoidEventChannelSO m_LoadBattleUi;
 
-    [SerializeField] public VoidEventChannelSO m_LoadUi;
+    [SerializeField] public VoidEventChannelSO m_LoadOverworldUi;
 
     [SerializeField] private StringEventChannelSO m_LoadScene;
-    
+
     private void Start()
     {
         DontDestroyOnLoad( gameObject );
 
-        m_LoadUi.OnEventRaised       += OnLoadUi;
-        m_LoadBattleUi.OnEventRaised += OnLoadBattleUi;
+        m_LoadBattleUi.OnEventRaised    += OnLoadBattleUi;
+        m_LoadOverworldUi.OnEventRaised += OnLoadOverworldUi;
     }
 
     private void OnLoadBattleUi()
@@ -30,8 +36,9 @@ public class ResourceLoader : MonoBehaviour
         Instantiate( BattleUiPrefab );
     }
 
-    private void OnLoadUi()
+    private void OnLoadOverworldUi()
     {
-        Instantiate( OverworldUiPrefab );
+        var oui = Instantiate( OverworldUiPrefab );
+        oui.GetComponent< OverworldHUD >().observedEntity = Game.player.GetComponent< Entity >();
     }
 }

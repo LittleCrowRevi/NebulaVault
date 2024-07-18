@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: SlimeHealth
   m_EditorClassIdentifier: 
   baseValue: 50
-  currentValue: 0
+  currentValue: 50

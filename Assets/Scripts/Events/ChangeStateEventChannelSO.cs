@@ -5,7 +5,9 @@ using UnityEngine.Events;
 [CreateAssetMenu( menuName = "Events/State Event Channel" )]
 public class ChangeStateEventChannelSO : ScriptableObject
 {
-    public UnityAction< IState, TransitionType > OnEventRaised;
+    public delegate void Event( IState state, TransitionType transitionType);
+
+    public event Event OnEventRaised;
 
     public void RaiseEvent( IState state, TransitionType transitionType )
     {

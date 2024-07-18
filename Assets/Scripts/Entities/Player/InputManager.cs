@@ -44,11 +44,13 @@ public class InputManager : MonoBehaviour
 
     public void OnDebugExit()
     {
-        m_ChangeState.IsValid()?.RaiseEvent( new ExplorationState(), TransitionType.Remove );
+        m_ChangeState.IsValid()?.RaiseEvent( null, TransitionType.Remove );
     }
 
     public void OnDebugStartBattle()
     {
-        m_InitiateBattle.IsValid()?.RaiseEvent( new GameObject[] { gameObject }, new GameObject[] {} );
+        var slime_prefab = Resources.Load< GameObject >( "Entities/Enemies/Slime/Slime_Prefab" );
+
+        m_InitiateBattle.IsValid()?.RaiseEvent( new GameObject[] { gameObject }, new GameObject[] { slime_prefab } );
     }
 }
